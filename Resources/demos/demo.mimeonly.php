@@ -51,7 +51,7 @@ function GetMIMEtype($filename) {
 
 			// ID3v2 is the only tag format that might be prepended in front of files, and it's non-trivial to skip, easier just to parse it and know where to skip to
 			getid3_lib::IncludeDependency(GETID3_INCLUDEPATH.'module.tag.id3v2.php', __FILE__, true);
-			$getid3_id3v2 = new GetId3_Module_Tag_Id3v2($getID3);
+			$getid3_id3v2 = new GetId3\Module\Tag\Id3v2($getID3);
 			$getid3_id3v2->Analyze();
 
 			fseek($fp, $getID3->info['avdataoffset'], SEEK_SET);

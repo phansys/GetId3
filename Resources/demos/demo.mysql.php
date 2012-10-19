@@ -320,7 +320,7 @@ function SynchronizeAllTags($filename, $synchronizefrom='all', $synchronizeto='A
 	}
 
 	getid3_lib::IncludeDependency(GETID3_INCLUDEPATH.'write.php', __FILE__, true);
-	$tagwriter = new GetId3_Write_Tags;
+	$tagwriter = new GetId3\Write\Tags;
 	$tagwriter->filename       = $filename;
 	$tagwriter->tagformats     = $TagFormatsToWrite;
 	$tagwriter->overwrite_tags = true;

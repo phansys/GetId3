@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Tta extends GetId3_Handler_BaseHandler
+class Tta extends BaseHandler
 {
 
     /**
@@ -41,7 +47,7 @@ class GetId3_Module_Audio_Tta extends GetId3_Handler_BaseHandler
 		$info['tta']['magic'] = substr($ttaheader, 0, 3);
 		$magic = 'TTA';
 		if ($info['tta']['magic'] != $magic) {
-			$info['error'][] = 'Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes($info['tta']['magic']).'"';
+			$info['error'][] = 'Expecting "'.Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes($info['tta']['magic']).'"';
 			unset($info['fileformat']);
 			unset($info['audio']);
 			unset($info['tta']);
@@ -57,10 +63,10 @@ class GetId3_Module_Audio_Tta extends GetId3_Handler_BaseHandler
 				$info['avdataoffset'] += 16;
 
 				$info['tta']['compression_level']   = ord($ttaheader{3});
-				$info['tta']['channels']            = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader,  4,  2));
-				$info['tta']['bits_per_sample']     = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader,  6,  2));
-				$info['tta']['sample_rate']         = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader,  8,  4));
-				$info['tta']['samples_per_channel'] = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader, 12,  4));
+				$info['tta']['channels']            = Helper::LittleEndian2Int(substr($ttaheader,  4,  2));
+				$info['tta']['bits_per_sample']     = Helper::LittleEndian2Int(substr($ttaheader,  6,  2));
+				$info['tta']['sample_rate']         = Helper::LittleEndian2Int(substr($ttaheader,  8,  4));
+				$info['tta']['samples_per_channel'] = Helper::LittleEndian2Int(substr($ttaheader, 12,  4));
 
 				$info['audio']['encoder_options']   = '-e'.$info['tta']['compression_level'];
 				$info['playtime_seconds']           = $info['tta']['samples_per_channel'] / $info['tta']['sample_rate'];
@@ -71,12 +77,12 @@ class GetId3_Module_Audio_Tta extends GetId3_Handler_BaseHandler
 				$info['tta']['major_version'] = 2;
 				$info['avdataoffset'] += 20;
 
-				$info['tta']['compression_level']   = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader,  4,  2));
-				$info['tta']['audio_format']        = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader,  6,  2));
-				$info['tta']['channels']            = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader,  8,  2));
-				$info['tta']['bits_per_sample']     = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader, 10,  2));
-				$info['tta']['sample_rate']         = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader, 12,  4));
-				$info['tta']['data_length']         = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader, 16,  4));
+				$info['tta']['compression_level']   = Helper::LittleEndian2Int(substr($ttaheader,  4,  2));
+				$info['tta']['audio_format']        = Helper::LittleEndian2Int(substr($ttaheader,  6,  2));
+				$info['tta']['channels']            = Helper::LittleEndian2Int(substr($ttaheader,  8,  2));
+				$info['tta']['bits_per_sample']     = Helper::LittleEndian2Int(substr($ttaheader, 10,  2));
+				$info['tta']['sample_rate']         = Helper::LittleEndian2Int(substr($ttaheader, 12,  4));
+				$info['tta']['data_length']         = Helper::LittleEndian2Int(substr($ttaheader, 16,  4));
 
 				$info['audio']['encoder_options']   = '-e'.$info['tta']['compression_level'];
 				$info['playtime_seconds']           = $info['tta']['data_length'] / $info['tta']['sample_rate'];
@@ -87,19 +93,19 @@ class GetId3_Module_Audio_Tta extends GetId3_Handler_BaseHandler
 				$info['tta']['major_version'] = 3;
 				$info['avdataoffset'] += 26;
 
-				$info['tta']['audio_format']        = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader,  4,  2)); // GetId3_riff::RIFFwFormatTagLookup()
-				$info['tta']['channels']            = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader,  6,  2));
-				$info['tta']['bits_per_sample']     = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader,  8,  2));
-				$info['tta']['sample_rate']         = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader, 10,  4));
-				$info['tta']['data_length']         = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader, 14,  4));
+				$info['tta']['audio_format']        = Helper::LittleEndian2Int(substr($ttaheader,  4,  2)); // GetId3_riff::RIFFwFormatTagLookup()
+				$info['tta']['channels']            = Helper::LittleEndian2Int(substr($ttaheader,  6,  2));
+				$info['tta']['bits_per_sample']     = Helper::LittleEndian2Int(substr($ttaheader,  8,  2));
+				$info['tta']['sample_rate']         = Helper::LittleEndian2Int(substr($ttaheader, 10,  4));
+				$info['tta']['data_length']         = Helper::LittleEndian2Int(substr($ttaheader, 14,  4));
 				$info['tta']['crc32_footer']        =                              substr($ttaheader, 18,  4);
-				$info['tta']['seek_point']          = GetId3_Lib_Helper::LittleEndian2Int(substr($ttaheader, 22,  4));
+				$info['tta']['seek_point']          = Helper::LittleEndian2Int(substr($ttaheader, 22,  4));
 
 				$info['playtime_seconds']           = $info['tta']['data_length'] / $info['tta']['sample_rate'];
 				break;
 
 			default:
-				$info['error'][] = 'This version of GetId3() ['.$this->getid3->version().'] only knows how to handle TTA v1 and v2 - it may not work correctly with this file which appears to be TTA v'.$ttaheader{3};
+				$info['error'][] = 'This version of GetId3Core() ['.$this->getid3->version().'] only knows how to handle TTA v1 and v2 - it may not work correctly with this file which appears to be TTA v'.$ttaheader{3};
 				return false;
 				break;
 		}

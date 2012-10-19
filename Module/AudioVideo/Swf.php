@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\AudioVideo;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_AudioVideo_Swf extends GetId3_Handler_BaseHandler
+class Swf extends BaseHandler
 {
     /**
      *
@@ -55,14 +61,14 @@ class GetId3_Module_AudioVideo_Swf extends GetId3_Handler_BaseHandler
 				break;
 
 			default:
-				$info['error'][] = 'Expecting "FWS" or "CWS" at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes($info['swf']['header']['signature']).'"';
+				$info['error'][] = 'Expecting "FWS" or "CWS" at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes($info['swf']['header']['signature']).'"';
 				unset($info['swf']);
 				unset($info['fileformat']);
 				return false;
 				break;
 		}
-		$info['swf']['header']['version'] = GetId3_Lib_Helper::LittleEndian2Int(substr($SWFfileData, 3, 1));
-		$info['swf']['header']['length']  = GetId3_Lib_Helper::LittleEndian2Int(substr($SWFfileData, 4, 4));
+		$info['swf']['header']['version'] = Helper::LittleEndian2Int(substr($SWFfileData, 3, 1));
+		$info['swf']['header']['length']  = Helper::LittleEndian2Int(substr($SWFfileData, 4, 4));
 
 		if ($info['swf']['header']['compressed']) {
 			$SWFHead     = substr($SWFfileData, 0, 8);
@@ -82,8 +88,8 @@ class GetId3_Module_AudioVideo_Swf extends GetId3_Handler_BaseHandler
 			$FrameSizeDataString .= str_pad(decbin(ord(substr($SWFfileData, 8 + $i, 1))), 8, '0', STR_PAD_LEFT);
 		}
 		list($X1, $X2, $Y1, $Y2) = explode("\n", wordwrap($FrameSizeDataString, $FrameSizeBitsPerValue, "\n", 1));
-		$info['swf']['header']['frame_width']  = GetId3_Lib_Helper::Bin2Dec($X2);
-		$info['swf']['header']['frame_height'] = GetId3_Lib_Helper::Bin2Dec($Y2);
+		$info['swf']['header']['frame_width']  = Helper::Bin2Dec($X2);
+		$info['swf']['header']['frame_height'] = Helper::Bin2Dec($Y2);
 
 		// http://www-lehre.informatik.uni-osnabrueck.de/~fbstark/diplom/docs/swf/Flash_Uncovered.htm
 		// Next in the header is the frame rate, which is kind of weird.
@@ -92,8 +98,8 @@ class GetId3_Module_AudioVideo_Swf extends GetId3_Handler_BaseHandler
 		// Example: 0x000C  ->  0x0C  ->  12     So the frame rate is 12 fps.
 
 		// Byte at (8 + $FrameSizeDataLength) is always zero and ignored
-		$info['swf']['header']['frame_rate']  = GetId3_Lib_Helper::LittleEndian2Int(substr($SWFfileData,  9 + $FrameSizeDataLength, 1));
-		$info['swf']['header']['frame_count'] = GetId3_Lib_Helper::LittleEndian2Int(substr($SWFfileData, 10 + $FrameSizeDataLength, 2));
+		$info['swf']['header']['frame_rate']  = Helper::LittleEndian2Int(substr($SWFfileData,  9 + $FrameSizeDataLength, 1));
+		$info['swf']['header']['frame_count'] = Helper::LittleEndian2Int(substr($SWFfileData, 10 + $FrameSizeDataLength, 2));
 
 		$info['video']['frame_rate']         = $info['swf']['header']['frame_rate'];
 		$info['video']['resolution_x']       = intval(round($info['swf']['header']['frame_width']  / 20));
@@ -114,12 +120,12 @@ class GetId3_Module_AudioVideo_Swf extends GetId3_Handler_BaseHandler
 		while ($CurrentOffset < $SWFdataLength) {
 //echo __LINE__.'='.number_format(microtime(true) - $start_time, 3).'<br>';
 
-			$TagIDTagLength = GetId3_Lib_Helper::LittleEndian2Int(substr($SWFfileData, $CurrentOffset, 2));
+			$TagIDTagLength = Helper::LittleEndian2Int(substr($SWFfileData, $CurrentOffset, 2));
 			$TagID     = ($TagIDTagLength & 0xFFFC) >> 6;
 			$TagLength = ($TagIDTagLength & 0x003F);
 			$CurrentOffset += 2;
 			if ($TagLength == 0x3F) {
-				$TagLength = GetId3_Lib_Helper::LittleEndian2Int(substr($SWFfileData, $CurrentOffset, 4));
+				$TagLength = Helper::LittleEndian2Int(substr($SWFfileData, $CurrentOffset, 4));
 				$CurrentOffset += 4;
 			}
 
@@ -134,7 +140,7 @@ class GetId3_Module_AudioVideo_Swf extends GetId3_Handler_BaseHandler
 
 				case 9: // Set background color
 					//$info['swf']['tags'][] = $TagData;
-					$info['swf']['bgcolor'] = strtoupper(str_pad(dechex(GetId3_Lib_Helper::BigEndian2Int($TagData['data'])), 6, '0', STR_PAD_LEFT));
+					$info['swf']['bgcolor'] = strtoupper(str_pad(dechex(Helper::BigEndian2Int($TagData['data'])), 6, '0', STR_PAD_LEFT));
 					break;
 
 				default:

@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Au extends GetId3_Handler_BaseHandler
+class Au extends BaseHandler
 {
 
     /**
@@ -35,7 +41,7 @@ class GetId3_Module_Audio_Au extends GetId3_Handler_BaseHandler
 
 		$magic = '.snd';
 		if (substr($AUheader, 0, 4) != $magic) {
-			$info['error'][] = 'Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" (".snd") at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes(substr($AUheader, 0, 4)).'"';
+			$info['error'][] = 'Expecting "'.Helper::PrintHexBytes($magic).'" (".snd") at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes(substr($AUheader, 0, 4)).'"';
 			return false;
 		}
 
@@ -48,14 +54,14 @@ class GetId3_Module_Audio_Au extends GetId3_Handler_BaseHandler
 		$info['audio']['bitrate_mode'] = 'cbr';
 		$thisfile_au['encoding']               = 'ISO-8859-1';
 
-		$thisfile_au['header_length']   = GetId3_Lib_Helper::BigEndian2Int(substr($AUheader,  4, 4));
+		$thisfile_au['header_length']   = Helper::BigEndian2Int(substr($AUheader,  4, 4));
 		$AUheader .= fread($this->getid3->fp, $thisfile_au['header_length'] - 8);
 		$info['avdataoffset'] += $thisfile_au['header_length'];
 
-		$thisfile_au['data_size']             = GetId3_Lib_Helper::BigEndian2Int(substr($AUheader,  8, 4));
-		$thisfile_au['data_format_id']        = GetId3_Lib_Helper::BigEndian2Int(substr($AUheader, 12, 4));
-		$thisfile_au['sample_rate']           = GetId3_Lib_Helper::BigEndian2Int(substr($AUheader, 16, 4));
-		$thisfile_au['channels']              = GetId3_Lib_Helper::BigEndian2Int(substr($AUheader, 20, 4));
+		$thisfile_au['data_size']             = Helper::BigEndian2Int(substr($AUheader,  8, 4));
+		$thisfile_au['data_format_id']        = Helper::BigEndian2Int(substr($AUheader, 12, 4));
+		$thisfile_au['sample_rate']           = Helper::BigEndian2Int(substr($AUheader, 16, 4));
+		$thisfile_au['channels']              = Helper::BigEndian2Int(substr($AUheader, 20, 4));
 		$thisfile_au['comments']['comment'][] =                      trim(substr($AUheader, 24));
 
 		$thisfile_au['data_format'] = $this->AUdataFormatNameLookup($thisfile_au['data_format_id']);

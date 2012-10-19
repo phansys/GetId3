@@ -1,5 +1,10 @@
 <?php
 
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -30,13 +35,13 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
+class Mp3 extends BaseHandler
 {
     /**
      *
      * @var boolean
      */
-    public $allow_bruteforce = false; // forces GetId3() to scan the file byte-by-byte and log all the valid audio frame headers - extremely slow, unrecommended, but may provide data from otherwise-unusuable files
+    public $allow_bruteforce = false; // forces GetId3Core() to scan the file byte-by-byte and log all the valid audio frame headers - extremely slow, unrecommended, but may provide data from otherwise-unusuable files
 
     const GETID3_MP3_VALID_CHECK_FRAMES = 35;
 
@@ -508,7 +513,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
         if ($MPEGaudioHeaderValidCache[$head4]) {
             $thisfile_mpeg_audio['raw'] = $MPEGheaderRawArray;
         } else {
-            $info['error'][] = 'Invalid MPEG audio header (' . GetId3_Lib_Helper::PrintHexBytes($head4) . ') at offset ' . $offset;
+            $info['error'][] = 'Invalid MPEG audio header (' . Helper::PrintHexBytes($head4) . ') at offset ' . $offset;
             return false;
         }
 
@@ -530,7 +535,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
             $info['audio']['sample_rate'] = $thisfile_mpeg_audio['sample_rate'];
 
             if ($thisfile_mpeg_audio['protection']) {
-                $thisfile_mpeg_audio['crc'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                $thisfile_mpeg_audio['crc'] = Helper::BigEndian2Int(substr($headerstring,
                                                                               4,
                                                                               2));
             }
@@ -617,31 +622,31 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
 
             $FraunhoferVBROffset = 36;
 
-            $thisfile_mpeg_audio['VBR_encoder_version'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+            $thisfile_mpeg_audio['VBR_encoder_version'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                           $FraunhoferVBROffset + 4,
                                                                                           2)); // VbriVersion
-            $thisfile_mpeg_audio['VBR_encoder_delay'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+            $thisfile_mpeg_audio['VBR_encoder_delay'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                         $FraunhoferVBROffset + 6,
                                                                                         2)); // VbriDelay
-            $thisfile_mpeg_audio['VBR_quality'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+            $thisfile_mpeg_audio['VBR_quality'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                   $FraunhoferVBROffset + 8,
                                                                                   2)); // VbriQuality
-            $thisfile_mpeg_audio['VBR_bytes'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+            $thisfile_mpeg_audio['VBR_bytes'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                 $FraunhoferVBROffset + 10,
                                                                                 4)); // VbriStreamBytes
-            $thisfile_mpeg_audio['VBR_frames'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+            $thisfile_mpeg_audio['VBR_frames'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                  $FraunhoferVBROffset + 14,
                                                                                  4)); // VbriStreamFrames
-            $thisfile_mpeg_audio['VBR_seek_offsets'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+            $thisfile_mpeg_audio['VBR_seek_offsets'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                        $FraunhoferVBROffset + 18,
                                                                                        2)); // VbriTableSize
-            $thisfile_mpeg_audio['VBR_seek_scale'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+            $thisfile_mpeg_audio['VBR_seek_scale'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                      $FraunhoferVBROffset + 20,
                                                                                      2)); // VbriTableScale
-            $thisfile_mpeg_audio['VBR_entry_bytes'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+            $thisfile_mpeg_audio['VBR_entry_bytes'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                       $FraunhoferVBROffset + 22,
                                                                                       2)); // VbriEntryBytes
-            $thisfile_mpeg_audio['VBR_entry_frames'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+            $thisfile_mpeg_audio['VBR_entry_frames'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                        $FraunhoferVBROffset + 24,
                                                                                        2)); // VbriEntryFrames
 
@@ -649,7 +654,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
 
             $previousbyteoffset = $offset;
             for ($i = 0; $i < $thisfile_mpeg_audio['VBR_seek_offsets']; $i++) {
-                $Fraunhofer_OffsetN = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                $Fraunhofer_OffsetN = Helper::BigEndian2Int(substr($headerstring,
                                                                       $FraunhoferVBROffset,
                                                                       $thisfile_mpeg_audio['VBR_entry_bytes']));
                 $FraunhoferVBROffset += $thisfile_mpeg_audio['VBR_entry_bytes'];
@@ -699,7 +704,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
 //					$thisfile_mpeg_audio['bitrate_mode'] = 'cbr';
 //				}
 
-                $thisfile_mpeg_audio['xing_flags_raw'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                $thisfile_mpeg_audio['xing_flags_raw'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                          $VBRidOffset + 4,
                                                                                          4));
 
@@ -709,13 +714,13 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                 $thisfile_mpeg_audio['xing_flags']['vbr_scale'] = (bool) ($thisfile_mpeg_audio['xing_flags_raw'] & 0x00000008);
 
                 if ($thisfile_mpeg_audio['xing_flags']['frames']) {
-                    $thisfile_mpeg_audio['VBR_frames'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                    $thisfile_mpeg_audio['VBR_frames'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                          $VBRidOffset + 8,
                                                                                          4));
                     //$thisfile_mpeg_audio['VBR_frames']--; // don't count header Xing/Info frame
                 }
                 if ($thisfile_mpeg_audio['xing_flags']['bytes']) {
-                    $thisfile_mpeg_audio['VBR_bytes'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                    $thisfile_mpeg_audio['VBR_bytes'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                         $VBRidOffset + 12,
                                                                                         4));
                 }
@@ -744,7 +749,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                     }
                 }
                 if ($thisfile_mpeg_audio['xing_flags']['vbr_scale']) {
-                    $thisfile_mpeg_audio['VBR_scale'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                    $thisfile_mpeg_audio['VBR_scale'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                         $VBRidOffset + 116,
                                                                                         4));
                 }
@@ -788,7 +793,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                         // This field is there to indicate a quality level, although the scale was not precised in the original Xing specifications.
                         // Actually overwrites original Xing bytes
                         unset($thisfile_mpeg_audio['VBR_scale']);
-                        $thisfile_mpeg_audio_lame['vbr_quality'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $thisfile_mpeg_audio_lame['vbr_quality'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                                    $LAMEtagOffsetContant + 0x9B,
                                                                                                    1));
 
@@ -798,7 +803,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                                                                             9);
 
                         // byte $A5  Info Tag revision + VBR method
-                        $LAMEtagRevisionVBRmethod = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $LAMEtagRevisionVBRmethod = Helper::BigEndian2Int(substr($headerstring,
                                                                                     $LAMEtagOffsetContant + 0xA5,
                                                                                     1));
 
@@ -808,7 +813,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                         $thisfile_mpeg_audio['bitrate_mode'] = substr($thisfile_mpeg_audio_lame['vbr_method'],
                                                                       0, 3); // usually either 'cbr' or 'vbr', but truncates 'vbr-old / vbr-rh' to 'vbr'
                         // byte $A6  Lowpass filter value
-                        $thisfile_mpeg_audio_lame['lowpass_frequency'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $thisfile_mpeg_audio_lame['lowpass_frequency'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                                          $LAMEtagOffsetContant + 0xA6,
                                                                                                          1)) * 100;
 
@@ -818,26 +823,26 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                         if ($thisfile_mpeg_audio_lame['short_version'] >= 'LAME3.94b') {
                             // LAME 3.94a16 and later - 9.23 fixed point
                             // ie 0x0059E2EE / (2^23) = 5890798 / 8388608 = 0.7022378444671630859375
-                            $thisfile_mpeg_audio_lame_RGAD['peak_amplitude'] = (float) ((GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                            $thisfile_mpeg_audio_lame_RGAD['peak_amplitude'] = (float) ((Helper::BigEndian2Int(substr($headerstring,
                                                                                                                          $LAMEtagOffsetContant + 0xA7,
                                                                                                                          4))) / 8388608);
                         } else {
                             // LAME 3.94a15 and earlier - 32-bit floating point
                             // Actually 3.94a16 will fall in here too and be WRONG, but is hard to detect 3.94a16 vs 3.94a15
-                            $thisfile_mpeg_audio_lame_RGAD['peak_amplitude'] = GetId3_Lib_Helper::LittleEndian2Float(substr($headerstring,
+                            $thisfile_mpeg_audio_lame_RGAD['peak_amplitude'] = Helper::LittleEndian2Float(substr($headerstring,
                                                                                                                     $LAMEtagOffsetContant + 0xA7,
                                                                                                                     4));
                         }
                         if ($thisfile_mpeg_audio_lame_RGAD['peak_amplitude'] == 0) {
                             unset($thisfile_mpeg_audio_lame_RGAD['peak_amplitude']);
                         } else {
-                            $thisfile_mpeg_audio_lame_RGAD['peak_db'] = GetId3_Lib_Helper::RGADamplitude2dB($thisfile_mpeg_audio_lame_RGAD['peak_amplitude']);
+                            $thisfile_mpeg_audio_lame_RGAD['peak_db'] = Helper::RGADamplitude2dB($thisfile_mpeg_audio_lame_RGAD['peak_amplitude']);
                         }
 
-                        $thisfile_mpeg_audio_lame_raw['RGAD_track'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $thisfile_mpeg_audio_lame_raw['RGAD_track'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                                       $LAMEtagOffsetContant + 0xAB,
                                                                                                       2));
-                        $thisfile_mpeg_audio_lame_raw['RGAD_album'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $thisfile_mpeg_audio_lame_raw['RGAD_album'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                                       $LAMEtagOffsetContant + 0xAD,
                                                                                                       2));
 
@@ -848,9 +853,9 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                             $thisfile_mpeg_audio_lame_RGAD_track['raw']['originator'] = ($thisfile_mpeg_audio_lame_raw['RGAD_track'] & 0x1C00) >> 10;
                             $thisfile_mpeg_audio_lame_RGAD_track['raw']['sign_bit'] = ($thisfile_mpeg_audio_lame_raw['RGAD_track'] & 0x0200) >> 9;
                             $thisfile_mpeg_audio_lame_RGAD_track['raw']['gain_adjust'] = $thisfile_mpeg_audio_lame_raw['RGAD_track'] & 0x01FF;
-                            $thisfile_mpeg_audio_lame_RGAD_track['name'] = GetId3_Lib_Helper::RGADnameLookup($thisfile_mpeg_audio_lame_RGAD_track['raw']['name']);
-                            $thisfile_mpeg_audio_lame_RGAD_track['originator'] = GetId3_Lib_Helper::RGADoriginatorLookup($thisfile_mpeg_audio_lame_RGAD_track['raw']['originator']);
-                            $thisfile_mpeg_audio_lame_RGAD_track['gain_db'] = GetId3_Lib_Helper::RGADadjustmentLookup($thisfile_mpeg_audio_lame_RGAD_track['raw']['gain_adjust'],
+                            $thisfile_mpeg_audio_lame_RGAD_track['name'] = Helper::RGADnameLookup($thisfile_mpeg_audio_lame_RGAD_track['raw']['name']);
+                            $thisfile_mpeg_audio_lame_RGAD_track['originator'] = Helper::RGADoriginatorLookup($thisfile_mpeg_audio_lame_RGAD_track['raw']['originator']);
+                            $thisfile_mpeg_audio_lame_RGAD_track['gain_db'] = Helper::RGADadjustmentLookup($thisfile_mpeg_audio_lame_RGAD_track['raw']['gain_adjust'],
                                                                                                               $thisfile_mpeg_audio_lame_RGAD_track['raw']['sign_bit']);
 
                             if (!empty($thisfile_mpeg_audio_lame_RGAD['peak_amplitude'])) {
@@ -867,9 +872,9 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                             $thisfile_mpeg_audio_lame_RGAD_album['raw']['originator'] = ($thisfile_mpeg_audio_lame_raw['RGAD_album'] & 0x1C00) >> 10;
                             $thisfile_mpeg_audio_lame_RGAD_album['raw']['sign_bit'] = ($thisfile_mpeg_audio_lame_raw['RGAD_album'] & 0x0200) >> 9;
                             $thisfile_mpeg_audio_lame_RGAD_album['raw']['gain_adjust'] = $thisfile_mpeg_audio_lame_raw['RGAD_album'] & 0x01FF;
-                            $thisfile_mpeg_audio_lame_RGAD_album['name'] = GetId3_Lib_Helper::RGADnameLookup($thisfile_mpeg_audio_lame_RGAD_album['raw']['name']);
-                            $thisfile_mpeg_audio_lame_RGAD_album['originator'] = GetId3_Lib_Helper::RGADoriginatorLookup($thisfile_mpeg_audio_lame_RGAD_album['raw']['originator']);
-                            $thisfile_mpeg_audio_lame_RGAD_album['gain_db'] = GetId3_Lib_Helper::RGADadjustmentLookup($thisfile_mpeg_audio_lame_RGAD_album['raw']['gain_adjust'],
+                            $thisfile_mpeg_audio_lame_RGAD_album['name'] = Helper::RGADnameLookup($thisfile_mpeg_audio_lame_RGAD_album['raw']['name']);
+                            $thisfile_mpeg_audio_lame_RGAD_album['originator'] = Helper::RGADoriginatorLookup($thisfile_mpeg_audio_lame_RGAD_album['raw']['originator']);
+                            $thisfile_mpeg_audio_lame_RGAD_album['gain_db'] = Helper::RGADadjustmentLookup($thisfile_mpeg_audio_lame_RGAD_album['raw']['gain_adjust'],
                                                                                                               $thisfile_mpeg_audio_lame_RGAD_album['raw']['sign_bit']);
 
                             if (!empty($thisfile_mpeg_audio_lame_RGAD['peak_amplitude'])) {
@@ -886,7 +891,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
 
 
                         // byte $AF  Encoding flags + ATH Type
-                        $EncodingFlagsATHtype = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $EncodingFlagsATHtype = Helper::BigEndian2Int(substr($headerstring,
                                                                                 $LAMEtagOffsetContant + 0xAF,
                                                                                 1));
                         $thisfile_mpeg_audio_lame['encoding_flags']['nspsytune'] = (bool) ($EncodingFlagsATHtype & 0x10);
@@ -896,7 +901,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                         $thisfile_mpeg_audio_lame['ath_type'] = $EncodingFlagsATHtype & 0x0F;
 
                         // byte $B0  if ABR {specified bitrate} else {minimal bitrate}
-                        $thisfile_mpeg_audio_lame['raw']['abrbitrate_minbitrate'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $thisfile_mpeg_audio_lame['raw']['abrbitrate_minbitrate'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                                                     $LAMEtagOffsetContant + 0xB0,
                                                                                                                     1));
                         if ($thisfile_mpeg_audio_lame_raw['vbr_method'] == 2) { // Average BitRate (ABR)
@@ -908,14 +913,14 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                         }
 
                         // bytes $B1-$B3  Encoder delays
-                        $EncoderDelays = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $EncoderDelays = Helper::BigEndian2Int(substr($headerstring,
                                                                          $LAMEtagOffsetContant + 0xB1,
                                                                          3));
                         $thisfile_mpeg_audio_lame['encoder_delay'] = ($EncoderDelays & 0xFFF000) >> 12;
                         $thisfile_mpeg_audio_lame['end_padding'] = $EncoderDelays & 0x000FFF;
 
                         // byte $B4  Misc
-                        $MiscByte = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $MiscByte = Helper::BigEndian2Int(substr($headerstring,
                                                                     $LAMEtagOffsetContant + 0xB4,
                                                                     1));
                         $thisfile_mpeg_audio_lame_raw['noise_shaping'] = ($MiscByte & 0x03);
@@ -928,17 +933,17 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                         $thisfile_mpeg_audio_lame['source_sample_freq'] = self::LAMEmiscSourceSampleFrequencyLookup($thisfile_mpeg_audio_lame_raw['source_sample_freq']);
 
                         // byte $B5  MP3 Gain
-                        $thisfile_mpeg_audio_lame_raw['mp3_gain'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $thisfile_mpeg_audio_lame_raw['mp3_gain'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                                     $LAMEtagOffsetContant + 0xB5,
                                                                                                     1),
                                                                                                     false,
                                                                                                     true);
-                        $thisfile_mpeg_audio_lame['mp3_gain_db'] = (GetId3_Lib_Helper::RGADamplitude2dB(2) / 4) * $thisfile_mpeg_audio_lame_raw['mp3_gain'];
+                        $thisfile_mpeg_audio_lame['mp3_gain_db'] = (Helper::RGADamplitude2dB(2) / 4) * $thisfile_mpeg_audio_lame_raw['mp3_gain'];
                         $thisfile_mpeg_audio_lame['mp3_gain_factor'] = pow(2,
                                                                            ($thisfile_mpeg_audio_lame['mp3_gain_db'] / 6));
 
                         // bytes $B6-$B7  Preset and surround info
-                        $PresetSurroundBytes = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $PresetSurroundBytes = Helper::BigEndian2Int(substr($headerstring,
                                                                                $LAMEtagOffsetContant + 0xB6,
                                                                                2));
                         // Reserved                                                    = ($PresetSurroundBytes & 0xC000);
@@ -955,18 +960,18 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                         }
 
                         // bytes $B8-$BB  MusicLength
-                        $thisfile_mpeg_audio_lame['audio_bytes'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $thisfile_mpeg_audio_lame['audio_bytes'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                                    $LAMEtagOffsetContant + 0xB8,
                                                                                                    4));
                         $ExpectedNumberOfAudioBytes = (($thisfile_mpeg_audio_lame['audio_bytes'] > 0) ? $thisfile_mpeg_audio_lame['audio_bytes'] : $thisfile_mpeg_audio['VBR_bytes']);
 
                         // bytes $BC-$BD  MusicCRC
-                        $thisfile_mpeg_audio_lame['music_crc'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $thisfile_mpeg_audio_lame['music_crc'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                                  $LAMEtagOffsetContant + 0xBC,
                                                                                                  2));
 
                         // bytes $BE-$BF  CRC-16 of Info Tag
-                        $thisfile_mpeg_audio_lame['lame_tag_crc'] = GetId3_Lib_Helper::BigEndian2Int(substr($headerstring,
+                        $thisfile_mpeg_audio_lame['lame_tag_crc'] = Helper::BigEndian2Int(substr($headerstring,
                                                                                                     $LAMEtagOffsetContant + 0xBE,
                                                                                                     2));
 
@@ -1280,7 +1285,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                 $framelength = $framelength2;
             }
             if (!$framelength) {
-                $info['error'][] = 'Cannot find next free-format synch pattern (' . GetId3_Lib_Helper::PrintHexBytes($SyncPattern1) . ' or ' . GetId3_Lib_Helper::PrintHexBytes($SyncPattern2) . ') after offset ' . $offset;
+                $info['error'][] = 'Cannot find next free-format synch pattern (' . Helper::PrintHexBytes($SyncPattern1) . ' or ' . Helper::PrintHexBytes($SyncPattern2) . ') after offset ' . $offset;
                 return false;
             } else {
                 $info['warning'][] = 'ModeExtension varies between first frame and other frames (known free-format issue in LAME 3.88)';
@@ -1417,11 +1422,11 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                         if ($MPEGaudioHeaderValidCache[$next4]) {
                             fseek($this->getid3->fp, -4, SEEK_CUR);
 
-                            GetId3_Lib_Helper::safe_inc($Distribution['bitrate'][$LongMPEGbitrateLookup[$head4]]);
-                            GetId3_Lib_Helper::safe_inc($Distribution['layer'][$LongMPEGlayerLookup[$head4]]);
-                            GetId3_Lib_Helper::safe_inc($Distribution['version'][$LongMPEGversionLookup[$head4]]);
-                            GetId3_Lib_Helper::safe_inc($Distribution['padding'][intval($LongMPEGpaddingLookup[$head4])]);
-                            GetId3_Lib_Helper::safe_inc($Distribution['frequency'][$LongMPEGfrequencyLookup[$head4]]);
+                            Helper::safe_inc($Distribution['bitrate'][$LongMPEGbitrateLookup[$head4]]);
+                            Helper::safe_inc($Distribution['layer'][$LongMPEGlayerLookup[$head4]]);
+                            Helper::safe_inc($Distribution['version'][$LongMPEGversionLookup[$head4]]);
+                            Helper::safe_inc($Distribution['padding'][intval($LongMPEGpaddingLookup[$head4])]);
+                            Helper::safe_inc($Distribution['frequency'][$LongMPEGfrequencyLookup[$head4]]);
                             if ($max_frames_scan && (++$frames_scanned >= $max_frames_scan)) {
                                 $pct_data_scanned = (ftell($this->getid3->fp) - $info['avdataoffset']) / ($info['avdataend'] - $info['avdataoffset']);
                                 $info['warning'][] = 'too many MPEG audio frames to scan, only scanned first ' . $max_frames_scan . ' frames (' . number_format($pct_data_scanned * 100,
@@ -1474,13 +1479,13 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
         }
         $info['mpeg']['audio']['bitrate'] = ($bittotal / $info['mpeg']['audio']['frame_count']);
         $info['mpeg']['audio']['bitrate_mode'] = ((count($Distribution['bitrate']) > 0) ? 'vbr' : 'cbr');
-        $info['mpeg']['audio']['sample_rate'] = GetId3_Lib_Helper::array_max($Distribution['frequency'],
+        $info['mpeg']['audio']['sample_rate'] = Helper::array_max($Distribution['frequency'],
                                                                      true);
 
         $info['audio']['bitrate'] = $info['mpeg']['audio']['bitrate'];
         $info['audio']['bitrate_mode'] = $info['mpeg']['audio']['bitrate_mode'];
         $info['audio']['sample_rate'] = $info['mpeg']['audio']['sample_rate'];
-        $info['audio']['dataformat'] = 'mp' . GetId3_Lib_Helper::array_max($Distribution['layer'],
+        $info['audio']['dataformat'] = 'mp' . Helper::array_max($Distribution['layer'],
                                                                    true);
         $info['fileformat'] = $info['audio']['dataformat'];
 
@@ -1691,9 +1696,9 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                                     $SynchErrorsFound++;
                                     $synchstartoffset++;
                                 } else {
-                                    GetId3_Lib_Helper::safe_inc($info['mpeg']['audio']['bitrate_distribution'][$thisframebitrate]);
-                                    GetId3_Lib_Helper::safe_inc($info['mpeg']['audio']['stereo_distribution'][$dummy['mpeg']['audio']['channelmode']]);
-                                    GetId3_Lib_Helper::safe_inc($info['mpeg']['audio']['version_distribution'][$dummy['mpeg']['audio']['version']]);
+                                    Helper::safe_inc($info['mpeg']['audio']['bitrate_distribution'][$thisframebitrate]);
+                                    Helper::safe_inc($info['mpeg']['audio']['stereo_distribution'][$dummy['mpeg']['audio']['channelmode']]);
+                                    Helper::safe_inc($info['mpeg']['audio']['version_distribution'][$dummy['mpeg']['audio']['version']]);
                                     $synchstartoffset += $dummy['mpeg']['audio']['framelength'];
                                 }
                                 $frames_scanned++;
@@ -1740,7 +1745,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
                             $info['error'][] = 'Corrupt MP3 file: framecounter == zero';
                             return false;
                         }
-                        $info['mpeg']['audio']['frame_count'] = GetId3_Lib_Helper::CastAsInt($framecounter);
+                        $info['mpeg']['audio']['frame_count'] = Helper::CastAsInt($framecounter);
                         $info['mpeg']['audio']['bitrate'] = ($bittotal / $framecounter);
 
                         $info['audio']['bitrate'] = $info['mpeg']['audio']['bitrate'];
@@ -2024,7 +2029,7 @@ class GetId3_Module_Audio_Mp3 extends GetId3_Handler_BaseHandler
             return false;
         }
 
-        $MPEGrawHeader['synch'] = (GetId3_Lib_Helper::BigEndian2Int(substr($Header4Bytes,
+        $MPEGrawHeader['synch'] = (Helper::BigEndian2Int(substr($Header4Bytes,
                                                                    0, 2)) & 0xFFE0) >> 4;
         $MPEGrawHeader['version'] = (ord($Header4Bytes{1}) & 0x18) >> 3; //    BB
         $MPEGrawHeader['layer'] = (ord($Header4Bytes{1}) & 0x06) >> 1; //      CC

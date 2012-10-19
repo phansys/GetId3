@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Graphic;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Graphic_Gif extends GetId3_Handler_BaseHandler
+class Gif extends BaseHandler
 {
 
     /**
@@ -44,7 +50,7 @@ class GetId3_Module_Graphic_Gif extends GetId3_Handler_BaseHandler
 
 		$magic = 'GIF';
 		if ($info['gif']['header']['raw']['identifier'] != $magic) {
-			$info['error'][] = 'Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes($info['gif']['header']['raw']['identifier']).'"';
+			$info['error'][] = 'Expecting "'.Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes($info['gif']['header']['raw']['identifier']).'"';
 			unset($info['fileformat']);
 			unset($info['gif']);
 			return false;
@@ -52,15 +58,15 @@ class GetId3_Module_Graphic_Gif extends GetId3_Handler_BaseHandler
 
 		$info['gif']['header']['raw']['version']               =                              substr($GIFheader, $offset, 3);
 		$offset += 3;
-		$info['gif']['header']['raw']['width']                 = GetId3_Lib_Helper::LittleEndian2Int(substr($GIFheader, $offset, 2));
+		$info['gif']['header']['raw']['width']                 = Helper::LittleEndian2Int(substr($GIFheader, $offset, 2));
 		$offset += 2;
-		$info['gif']['header']['raw']['height']                = GetId3_Lib_Helper::LittleEndian2Int(substr($GIFheader, $offset, 2));
+		$info['gif']['header']['raw']['height']                = Helper::LittleEndian2Int(substr($GIFheader, $offset, 2));
 		$offset += 2;
-		$info['gif']['header']['raw']['flags']                 = GetId3_Lib_Helper::LittleEndian2Int(substr($GIFheader, $offset, 1));
+		$info['gif']['header']['raw']['flags']                 = Helper::LittleEndian2Int(substr($GIFheader, $offset, 1));
 		$offset += 1;
-		$info['gif']['header']['raw']['bg_color_index']        = GetId3_Lib_Helper::LittleEndian2Int(substr($GIFheader, $offset, 1));
+		$info['gif']['header']['raw']['bg_color_index']        = Helper::LittleEndian2Int(substr($GIFheader, $offset, 1));
 		$offset += 1;
-		$info['gif']['header']['raw']['aspect_ratio']          = GetId3_Lib_Helper::LittleEndian2Int(substr($GIFheader, $offset, 1));
+		$info['gif']['header']['raw']['aspect_ratio']          = Helper::LittleEndian2Int(substr($GIFheader, $offset, 1));
 		$offset += 1;
 
 		$info['video']['resolution_x']                         = $info['gif']['header']['raw']['width'];
@@ -118,7 +124,7 @@ class GetId3_Module_Graphic_Gif extends GetId3_Handler_BaseHandler
 //
 //					if ($ImageDescriptor['flags']['use_local_color_map']) {
 //
-//						$info['warning'][] = 'This version of GetId3() cannot parse local color maps for GIFs';
+//						$info['warning'][] = 'This version of GetId3Core() cannot parse local color maps for GIFs';
 //						return true;
 //
 //					}

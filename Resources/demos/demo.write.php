@@ -40,7 +40,7 @@ if (isset($_POST['WriteTags'])) {
 	if (!empty($TagFormatsToWrite)) {
 		echo 'starting to write tag(s)<BR>';
 
-		$tagwriter = new GetId3_Write_Tags;
+		$tagwriter = new GetId3\Write\Tags;
 		$tagwriter->filename       = $Filename;
 		$tagwriter->tagformats     = $TagFormatsToWrite;
 		$tagwriter->overwrite_tags = false;
@@ -191,7 +191,7 @@ if (!empty($Filename)) {
 		}
 		echo '<tr><td align="right"><b>Track</b></td><td><input type="text" size="2" name="Track" value="'.htmlentities($TrackNumber, ENT_QUOTES).'"> of <input type="text" size="2" name="TracksTotal" value="'.htmlentities($TracksTotal, ENT_QUOTES).'"></TD></TR>';
 
-		$ArrayOfGenresTemp = GetId3_Module_Tag_Id3v1::ArrayOfGenres();   // get the array of genres
+		$ArrayOfGenresTemp = GetId3\Module\Tag\Id3v1::ArrayOfGenres();   // get the array of genres
 		foreach ($ArrayOfGenresTemp as $key => $value) {      // change keys to match displayed value
 			$ArrayOfGenres[$value] = $value;
 		}
@@ -249,7 +249,7 @@ if (!empty($Filename)) {
 
 		echo '<tr><td align="right"><b>Picture</b><br>(ID3v2 only)</td><td><input type="file" name="userfile" accept="image/jpeg, image/gif, image/png"><br>';
 		echo '<select name="APICpictureType">';
-		$APICtypes = GetId3_Module_Tag_Id3v2::APICPictureTypeLookup('', true);
+		$APICtypes = GetId3\Module\Tag\Id3v2::APICPictureTypeLookup('', true);
 		foreach ($APICtypes as $key => $value) {
 			echo '<option value="'.htmlentities($key, ENT_QUOTES).'">'.htmlentities($value).'</option>';
 		}

@@ -1,4 +1,9 @@
 <?php
+
+namespace GetId3\Module\Graphic;
+
+use GetId3\Handler\BaseHandler;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +25,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Graphic_Pcd extends GetId3_Handler_BaseHandler
+class Pcd extends BaseHandler
 {
     /**
      *
@@ -95,7 +100,7 @@ class GetId3_Module_Graphic_Pcd extends GetId3_Handler_BaseHandler
 			}
 
 			// Example for plotting extracted data
-			//getid3_lib::IncludeDependency(GetId3::getIncludePath().'module.audio.ac3.php', __FILE__, true);
+			//getid3_lib::IncludeDependency(GetId3Core::getIncludePath().'module.audio.ac3.php', __FILE__, true);
 			//if ($PCDisVertical) {
 			//	$BMPinfo['resolution_x'] = $PCD_height;
 			//	$BMPinfo['resolution_y'] = $PCD_width;

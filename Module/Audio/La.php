@@ -1,4 +1,11 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +27,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_La extends GetId3_Handler_BaseHandler
+class La extends BaseHandler
 {
 
     /**
@@ -47,7 +54,7 @@ class GetId3_Module_Audio_La extends GetId3_Handler_BaseHandler
 				$info['la']['version']       = (float) $info['la']['version_major'] + ($info['la']['version_minor'] / 10);
 				$offset += 4;
 
-				$info['la']['uncompressed_size'] = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
+				$info['la']['uncompressed_size'] = Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
 				$offset += 4;
 				if ($info['la']['uncompressed_size'] == 0) {
 					$info['error'][] = 'Corrupt LA file: uncompressed_size == zero';
@@ -56,7 +63,7 @@ class GetId3_Module_Audio_La extends GetId3_Handler_BaseHandler
 
 				$WAVEchunk = substr($rawdata, $offset, 4);
 				if ($WAVEchunk !== 'WAVE') {
-					$info['error'][] = 'Expected "WAVE" ('.GetId3_Lib_Helper::PrintHexBytes('WAVE').') at offset '.$offset.', found "'.$WAVEchunk.'" ('.GetId3_Lib_Helper::PrintHexBytes($WAVEchunk).') instead.';
+					$info['error'][] = 'Expected "WAVE" ('.Helper::PrintHexBytes('WAVE').') at offset '.$offset.', found "'.$WAVEchunk.'" ('.Helper::PrintHexBytes($WAVEchunk).') instead.';
 					return false;
 				}
 				$offset += 4;
@@ -64,7 +71,7 @@ class GetId3_Module_Audio_La extends GetId3_Handler_BaseHandler
 				$info['la']['fmt_size'] = 24;
 				if ($info['la']['version'] >= 0.3) {
 
-					$info['la']['fmt_size']    = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
+					$info['la']['fmt_size']    = Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
 					$info['la']['header_size'] = 49 + $info['la']['fmt_size'] - 24;
 					$offset += 4;
 
@@ -77,48 +84,48 @@ class GetId3_Module_Audio_La extends GetId3_Handler_BaseHandler
 
 				$fmt_chunk = substr($rawdata, $offset, 4);
 				if ($fmt_chunk !== 'fmt ') {
-					$info['error'][] = 'Expected "fmt " ('.GetId3_Lib_Helper::PrintHexBytes('fmt ').') at offset '.$offset.', found "'.$fmt_chunk.'" ('.GetId3_Lib_Helper::PrintHexBytes($fmt_chunk).') instead.';
+					$info['error'][] = 'Expected "fmt " ('.Helper::PrintHexBytes('fmt ').') at offset '.$offset.', found "'.$fmt_chunk.'" ('.Helper::PrintHexBytes($fmt_chunk).') instead.';
 					return false;
 				}
 				$offset += 4;
-				$fmt_size = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
+				$fmt_size = Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
 				$offset += 4;
 
-				$info['la']['raw']['format']  = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 2));
+				$info['la']['raw']['format']  = Helper::LittleEndian2Int(substr($rawdata, $offset, 2));
 				$offset += 2;
 
-				$info['la']['channels']       = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 2));
+				$info['la']['channels']       = Helper::LittleEndian2Int(substr($rawdata, $offset, 2));
 				$offset += 2;
 				if ($info['la']['channels'] == 0) {
 					$info['error'][] = 'Corrupt LA file: channels == zero';
 						return false;
 				}
 
-				$info['la']['sample_rate'] = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
+				$info['la']['sample_rate'] = Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
 				$offset += 4;
 				if ($info['la']['sample_rate'] == 0) {
 					$info['error'][] = 'Corrupt LA file: sample_rate == zero';
 						return false;
 				}
 
-				$info['la']['bytes_per_second']     = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
+				$info['la']['bytes_per_second']     = Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
 				$offset += 4;
-				$info['la']['bytes_per_sample']     = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 2));
+				$info['la']['bytes_per_sample']     = Helper::LittleEndian2Int(substr($rawdata, $offset, 2));
 				$offset += 2;
-				$info['la']['bits_per_sample']      = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 2));
+				$info['la']['bits_per_sample']      = Helper::LittleEndian2Int(substr($rawdata, $offset, 2));
 				$offset += 2;
 
-				$info['la']['samples']              = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
+				$info['la']['samples']              = Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
 				$offset += 4;
 
-				$info['la']['raw']['flags']         = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 1));
+				$info['la']['raw']['flags']         = Helper::LittleEndian2Int(substr($rawdata, $offset, 1));
 				$offset += 1;
 				$info['la']['flags']['seekable']             = (bool) ($info['la']['raw']['flags'] & 0x01);
 				if ($info['la']['version'] >= 0.4) {
 					$info['la']['flags']['high_compression'] = (bool) ($info['la']['raw']['flags'] & 0x02);
 				}
 
-				$info['la']['original_crc']         = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
+				$info['la']['original_crc']         = Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
 				$offset += 4;
 
 				// mikeØbevin*de
@@ -140,7 +147,7 @@ class GetId3_Module_Audio_La extends GetId3_Handler_BaseHandler
 					$info['la']['seekpoint_count'] = floor($info['la']['samples'] / ($info['la']['blocksize'] * $info['la']['seekevery']));
 
 					for ($i = 0; $i < $info['la']['seekpoint_count']; $i++) {
-						$info['la']['seekpoints'][] = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
+						$info['la']['seekpoints'][] = Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
 						$offset += 4;
 					}
 				}
@@ -150,7 +157,7 @@ class GetId3_Module_Audio_La extends GetId3_Handler_BaseHandler
 					// Following the main header information, the program outputs all of the
 					// seekpoints. Following these is what I called the 'footer start',
 					// i.e. the position immediately after the La audio data is finished.
-					$info['la']['footerstart'] = GetId3_Lib_Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
+					$info['la']['footerstart'] = Helper::LittleEndian2Int(substr($rawdata, $offset, 4));
 					$offset += 4;
 
 					if ($info['la']['footerstart'] > $info['filesize']) {
@@ -166,7 +173,7 @@ class GetId3_Module_Audio_La extends GetId3_Handler_BaseHandler
 				}
 
 				if ($info['la']['footerstart'] < $info['avdataend']) {
-					if ($RIFFtempfilename = tempnam(GetId3_GetId3::getTempDir(), 'id3')) {
+					if ($RIFFtempfilename = tempnam(GetId3Core::getTempDir(), 'id3')) {
 						if ($RIFF_fp = fopen($RIFFtempfilename, 'w+b')) {
 							$RIFFdata = 'WAVE';
 							if ($info['la']['version'] == 0.2) {
@@ -178,13 +185,13 @@ class GetId3_Module_Audio_La extends GetId3_Handler_BaseHandler
 								fseek($this->getid3->fp, $info['la']['footerstart'], SEEK_SET);
 								$RIFFdata .= fread($this->getid3->fp, $info['avdataend'] - $info['la']['footerstart']);
 							}
-							$RIFFdata = 'RIFF'.GetId3_Lib_Helper::LittleEndian2String(strlen($RIFFdata), 4, false).$RIFFdata;
+							$RIFFdata = 'RIFF'.Helper::LittleEndian2String(strlen($RIFFdata), 4, false).$RIFFdata;
 							fwrite($RIFF_fp, $RIFFdata, strlen($RIFFdata));
 							fclose($RIFF_fp);
 
-							$getid3_temp = new GetId3_GetId3();
+							$getid3_temp = new GetId3Core();
 							$getid3_temp->openfile($RIFFtempfilename);
-							$getid3_riff = new GetId3_Module_AudioVideo_Riff($getid3_temp);
+							$getid3_riff = new GetId3\Module\AudioVideo\Riff($getid3_temp);
 							$getid3_riff->Analyze();
 
 							if (empty($getid3_temp->info['error'])) {
@@ -217,7 +224,7 @@ class GetId3_Module_Audio_La extends GetId3_Handler_BaseHandler
 
 			default:
 				if (substr($rawdata, $offset, 2) == 'LA') {
-					$info['error'][] = 'This version of GetId3() ['.$this->getid3->version().'] does not support LA version '.substr($rawdata, $offset + 2, 1).'.'.substr($rawdata, $offset + 3, 1).' which this appears to be - check http://getid3.sourceforge.net for updates.';
+					$info['error'][] = 'This version of GetId3Core() ['.$this->getid3->version().'] does not support LA version '.substr($rawdata, $offset + 2, 1).'.'.substr($rawdata, $offset + 3, 1).' which this appears to be - check http://getid3.sourceforge.net for updates.';
 				} else {
 					$info['error'][] = 'Not a LA (Lossless-Audio) file';
 				}

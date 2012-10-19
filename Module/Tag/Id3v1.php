@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Tag;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Tag_Id3v1 extends GetId3_Handler_BaseHandler
+class Id3v1 extends BaseHandler
 {
     /**
      *
@@ -29,7 +35,7 @@ class GetId3_Module_Tag_Id3v1 extends GetId3_Handler_BaseHandler
 	public function Analyze() {
 		$info = &$this->getid3->info;
 
-		if (!GetId3_Lib_Helper::intValueSupported($info['filesize'])) {
+		if (!Helper::intValueSupported($info['filesize'])) {
 			$info['warning'][] = 'Unable to check for ID3v1 because file is larger than '.round(PHP_INT_MAX / 1073741824).'GB';
 			return false;
 		}

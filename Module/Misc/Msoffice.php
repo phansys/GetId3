@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Misc;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Misc_Msoffice extends GetId3_Handler_BaseHandler
+class Msoffice extends BaseHandler
 {
 
     /**
@@ -34,12 +40,12 @@ class GetId3_Module_Misc_Msoffice extends GetId3_Handler_BaseHandler
 		$DOCFILEheader = fread($this->getid3->fp, 8);
 		$magic = "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1";
 		if (substr($DOCFILEheader, 0, 8) != $magic) {
-			$info['error'][] = 'Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" at '.$info['avdataoffset'].', found '.GetId3_Lib_Helper::PrintHexBytes(substr($DOCFILEheader, 0, 8)).' instead.';
+			$info['error'][] = 'Expecting "'.Helper::PrintHexBytes($magic).'" at '.$info['avdataoffset'].', found '.Helper::PrintHexBytes(substr($DOCFILEheader, 0, 8)).' instead.';
 			return false;
 		}
 		$info['fileformat'] = 'msoffice';
 
-$info['error'][] = 'MS Office (.doc, .xls, etc) parsing not enabled in this version of GetId3() ['.$this->getid3->version().']';
+$info['error'][] = 'MS Office (.doc, .xls, etc) parsing not enabled in this version of GetId3Core() ['.$this->getid3->version().']';
 return false;
 
 	}

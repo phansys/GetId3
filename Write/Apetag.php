@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Write;
+
+use GetId3\Lib\Helper;
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,9 +26,9 @@
  * @author James Heinrich <info@getid3.org>
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
- * @uses GetId3_Module_Tag_Apetag
+ * @uses GetId3\Module\Tag\Apetag
  */
-class GetId3_Write_Apetag
+class Apetag
 {
 
 	public $filename;
@@ -58,7 +64,7 @@ class GetId3_Write_Apetag
 	public function WriteAPEtag() {
 		// NOTE: All data passed to this function must be UTF-8 format
 
-		$getID3 = new GetId3_GetId3;
+		$getID3 = new GetId3Core();
 		$ThisFileInfo = $getID3->analyze($this->filename);
 
 		if (isset($ThisFileInfo['ape']['tag_offset_start']) && isset($ThisFileInfo['lyrics3']['tag_offset_end'])) {
@@ -122,7 +128,7 @@ class GetId3_Write_Apetag
      * @return boolean
      */
 	public function DeleteAPEtag() {
-		$getID3 = new GetId3_GetId3;
+		$getID3 = new GetId3Core();
 		$ThisFileInfo = $getID3->analyze($this->filename);
 		if (isset($ThisFileInfo['ape']['tag_offset_start']) && isset($ThisFileInfo['ape']['tag_offset_end'])) {
 			if (is_writable($this->filename) && is_file($this->filename) && ($fp = fopen($this->filename, 'a+b'))) {
@@ -177,7 +183,7 @@ class GetId3_Write_Apetag
 			$valuestring = rtrim($valuestring, "\x00");
 
 			// Length of the assigned value in bytes
-			$tagitem  = GetId3_Lib_Helper::LittleEndian2String(strlen($valuestring), 4);
+			$tagitem  = Helper::LittleEndian2String(strlen($valuestring), 4);
 
 			//$tagitem .= $this->GenerateAPEtagFlags(true, true, false, 0, false);
 			$tagitem .= "\x00\x00\x00\x00";
@@ -205,9 +211,9 @@ class GetId3_Write_Apetag
 		}
 
 		$APEheader  = 'APETAGEX';
-		$APEheader .= GetId3_Lib_Helper::LittleEndian2String(2000, 4);
-		$APEheader .= GetId3_Lib_Helper::LittleEndian2String(32 + $tagdatalength, 4);
-		$APEheader .= GetId3_Lib_Helper::LittleEndian2String(count($items), 4);
+		$APEheader .= Helper::LittleEndian2String(2000, 4);
+		$APEheader .= Helper::LittleEndian2String(32 + $tagdatalength, 4);
+		$APEheader .= Helper::LittleEndian2String(count($items), 4);
 		$APEheader .= $this->GenerateAPEtagFlags(true, true, $isheader, 0, false);
 		$APEheader .= str_repeat("\x00", 8);
 

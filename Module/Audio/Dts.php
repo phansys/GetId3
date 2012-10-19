@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Dts extends GetId3_Handler_BaseHandler
+class Dts extends BaseHandler
 {
     /**
      *
@@ -47,12 +53,12 @@ class GetId3_Module_Audio_Dts extends GetId3_Handler_BaseHandler
 		else {
 			if (!$this->isDependencyFor('matroska')) {
 				unset($info['fileformat']);
-				return $this->error('Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes(substr($DTSheader, 0, 4)).'"');
+				return $this->error('Expecting "'.Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes(substr($DTSheader, 0, 4)).'"');
 			}
 			$offset = 0;
 		}
 
-		$fhBS = GetId3_Lib_Helper::BigEndian2Bin(substr($DTSheader, $offset,  12));
+		$fhBS = Helper::BigEndian2Bin(substr($DTSheader, $offset,  12));
 		$bsOffset = 0;
 		$info['dts']['raw']['frame_type']             =        $this->readBinData($fhBS, $bsOffset,  1);
 		$info['dts']['raw']['deficit_samples']        =        $this->readBinData($fhBS, $bsOffset,  5);

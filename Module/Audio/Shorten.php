@@ -1,4 +1,11 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +27,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Shorten extends GetId3_Handler_BaseHandler
+class Shorten extends BaseHandler
 {
 
     /**
@@ -36,7 +43,7 @@ class GetId3_Module_Audio_Shorten extends GetId3_Handler_BaseHandler
 		$ShortenHeader = fread($this->getid3->fp, 8);
 		$magic = 'ajkg';
 		if (substr($ShortenHeader, 0, 4) != $magic) {
-			$info['error'][] = 'Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes(substr($ShortenHeader, 0, 4)).'"';
+			$info['error'][] = 'Expecting "'.Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes(substr($ShortenHeader, 0, 4)).'"';
 			return false;
 		}
 		$info['fileformat']            = 'shn';
@@ -44,20 +51,20 @@ class GetId3_Module_Audio_Shorten extends GetId3_Handler_BaseHandler
 		$info['audio']['lossless']     = true;
 		$info['audio']['bitrate_mode'] = 'vbr';
 
-		$info['shn']['version'] = GetId3_Lib_Helper::LittleEndian2Int(substr($ShortenHeader, 4, 1));
+		$info['shn']['version'] = Helper::LittleEndian2Int(substr($ShortenHeader, 4, 1));
 
 		fseek($this->getid3->fp, $info['avdataend'] - 12, SEEK_SET);
 		$SeekTableSignatureTest = fread($this->getid3->fp, 12);
 		$info['shn']['seektable']['present'] = (bool) (substr($SeekTableSignatureTest, 4, 8) == 'SHNAMPSK');
 		if ($info['shn']['seektable']['present']) {
-			$info['shn']['seektable']['length'] = GetId3_Lib_Helper::LittleEndian2Int(substr($SeekTableSignatureTest, 0, 4));
+			$info['shn']['seektable']['length'] = Helper::LittleEndian2Int(substr($SeekTableSignatureTest, 0, 4));
 			$info['shn']['seektable']['offset'] = $info['avdataend'] - $info['shn']['seektable']['length'];
 			fseek($this->getid3->fp, $info['shn']['seektable']['offset'], SEEK_SET);
 			$SeekTableMagic = fread($this->getid3->fp, 4);
 			$magic = 'SEEK';
 			if ($SeekTableMagic != $magic) {
 
-				$info['error'][] = 'Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" at offset '.$info['shn']['seektable']['offset'].', found "'.GetId3_Lib_Helper::PrintHexBytes($SeekTableMagic).'"';
+				$info['error'][] = 'Expecting "'.Helper::PrintHexBytes($magic).'" at offset '.$info['shn']['seektable']['offset'].', found "'.Helper::PrintHexBytes($SeekTableMagic).'"';
 				return false;
 
 			} else {
@@ -128,16 +135,16 @@ class GetId3_Module_Audio_Shorten extends GetId3_Handler_BaseHandler
 			return false;
 		}
 
-		if (GetId3_GetId3::environmentIsWindows()) {
+		if (GetId3Core::environmentIsWindows()) {
 
 			$RequiredFiles = array('shorten.exe', 'cygwin1.dll', 'head.exe');
 			foreach ($RequiredFiles as $required_file) {
-				if (!is_readable(GetId3_GetId3::getHelperAppsDir().$required_file)) {
-					$info['error'][] = GetId3_GetId3::getHelperAppsDir().$required_file.' does not exist';
+				if (!is_readable(GetId3Core::getHelperAppsDir().$required_file)) {
+					$info['error'][] = GetId3Core::getHelperAppsDir().$required_file.' does not exist';
 					return false;
 				}
 			}
-			$commandline = GetId3_GetId3::getHelperAppsDir().'shorten.exe -x "'.$info['filenamepath'].'" - | '.GetId3_GetId3::getHelperAppsDir().'head.exe -c 64';
+			$commandline = GetId3Core::getHelperAppsDir().'shorten.exe -x "'.$info['filenamepath'].'" - | '.GetId3Core::getHelperAppsDir().'head.exe -c 64';
 			$commandline = str_replace('/', '\\', $commandline);
 
 		} else {
@@ -158,15 +165,15 @@ class GetId3_Module_Audio_Shorten extends GetId3_Handler_BaseHandler
 
 		if (!empty($output) && (substr($output, 12, 4) == 'fmt ')) {
 
-			$fmt_size = GetId3_Lib_Helper::LittleEndian2Int(substr($output, 16, 4));
-			$DecodedWAVFORMATEX = GetId3_Module_AudioVideo_Riff::RIFFparseWAVEFORMATex(substr($output, 20, $fmt_size));
+			$fmt_size = Helper::LittleEndian2Int(substr($output, 16, 4));
+			$DecodedWAVFORMATEX = GetId3\Module\AudioVideo\Riff::RIFFparseWAVEFORMATex(substr($output, 20, $fmt_size));
 			$info['audio']['channels']        = $DecodedWAVFORMATEX['channels'];
 			$info['audio']['bits_per_sample'] = $DecodedWAVFORMATEX['bits_per_sample'];
 			$info['audio']['sample_rate']     = $DecodedWAVFORMATEX['sample_rate'];
 
 			if (substr($output, 20 + $fmt_size, 4) == 'data') {
 
-				$info['playtime_seconds'] = GetId3_Lib_Helper::LittleEndian2Int(substr($output, 20 + 4 + $fmt_size, 4)) / $DecodedWAVFORMATEX['raw']['nAvgBytesPerSec'];
+				$info['playtime_seconds'] = Helper::LittleEndian2Int(substr($output, 20 + 4 + $fmt_size, 4)) / $DecodedWAVFORMATEX['raw']['nAvgBytesPerSec'];
 
 			} else {
 

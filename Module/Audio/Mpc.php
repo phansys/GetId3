@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Mpc extends GetId3_Handler_BaseHandler
+class Mpc extends BaseHandler
 {
 
     /**
@@ -59,7 +65,7 @@ class GetId3_Module_Audio_Mpc extends GetId3_Handler_BaseHandler
 
 		} else {
 
-			$info['error'][] = 'Expecting "MP+" or "MPCK" at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes(substr($MPCheaderData, 0, 4)).'"';
+			$info['error'][] = 'Expecting "MP+" or "MPCK" at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes(substr($MPCheaderData, 0, 4)).'"';
 			unset($info['fileformat']);
 			unset($info['mpc']);
 			return false;
@@ -112,9 +118,9 @@ class GetId3_Module_Audio_Mpc extends GetId3_Handler_BaseHandler
 					if ($moreBytesToRead > 0) {
 						$MPCheaderData .= fread($this->getid3->fp, $moreBytesToRead);
 					}
-					$thisPacket['crc']               =       GetId3_Lib_Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 4));
+					$thisPacket['crc']               =       Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 4));
 					$packet_offset += 4;
-					$thisPacket['stream_version']    =       GetId3_Lib_Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 1));
+					$thisPacket['stream_version']    =       Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 1));
 					$packet_offset += 1;
 
 					$packetLength = 0;
@@ -125,7 +131,7 @@ class GetId3_Module_Audio_Mpc extends GetId3_Handler_BaseHandler
 					$thisPacket['beginning_silence'] = $this->SV8variableLengthInteger(substr($MPCheaderData, $packet_offset, $maxHandledPacketLength), $packetLength);
 					$packet_offset += $packetLength;
 
-					$otherUsefulData                 =       GetId3_Lib_Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 2));
+					$otherUsefulData                 =       Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 2));
 					$packet_offset += 2;
 					$thisPacket['sample_frequency_raw'] =        (($otherUsefulData & 0xE000) >> 13);
 					$thisPacket['max_bands_used']       =        (($otherUsefulData & 0x1F00) >>  8);
@@ -150,15 +156,15 @@ class GetId3_Module_Audio_Mpc extends GetId3_Handler_BaseHandler
 					if ($moreBytesToRead > 0) {
 						$MPCheaderData .= fread($this->getid3->fp, $moreBytesToRead);
 					}
-					$thisPacket['replaygain_version']     =       GetId3_Lib_Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 1));
+					$thisPacket['replaygain_version']     =       Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 1));
 					$packet_offset += 1;
-					$thisPacket['replaygain_title_gain']  =       GetId3_Lib_Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 2));
+					$thisPacket['replaygain_title_gain']  =       Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 2));
 					$packet_offset += 2;
-					$thisPacket['replaygain_title_peak']  =       GetId3_Lib_Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 2));
+					$thisPacket['replaygain_title_peak']  =       Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 2));
 					$packet_offset += 2;
-					$thisPacket['replaygain_album_gain']  =       GetId3_Lib_Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 2));
+					$thisPacket['replaygain_album_gain']  =       Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 2));
 					$packet_offset += 2;
-					$thisPacket['replaygain_album_peak']  =       GetId3_Lib_Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 2));
+					$thisPacket['replaygain_album_peak']  =       Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 2));
 					$packet_offset += 2;
 
 					if ($thisPacket['replaygain_title_gain']) { $info['replay_gain']['title']['gain'] = $thisPacket['replaygain_title_gain']; }
@@ -172,17 +178,17 @@ class GetId3_Module_Audio_Mpc extends GetId3_Handler_BaseHandler
 					if ($moreBytesToRead > 0) {
 						$MPCheaderData .= fread($this->getid3->fp, $moreBytesToRead);
 					}
-					$profile_pns                 = GetId3_Lib_Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 1));
+					$profile_pns                 = Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 1));
 					$packet_offset += 1;
 					$quality_int =                   (($profile_pns & 0xF0) >> 4);
 					$quality_dec =                   (($profile_pns & 0x0E) >> 3);
 					$thisPacket['quality'] = (float) $quality_int + ($quality_dec / 8);
 					$thisPacket['pns_tool'] = (bool) (($profile_pns & 0x01) >> 0);
-					$thisPacket['version_major'] = GetId3_Lib_Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 1));
+					$thisPacket['version_major'] = Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 1));
 					$packet_offset += 1;
-					$thisPacket['version_minor'] = GetId3_Lib_Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 1));
+					$thisPacket['version_minor'] = Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 1));
 					$packet_offset += 1;
-					$thisPacket['version_build'] = GetId3_Lib_Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 1));
+					$thisPacket['version_build'] = Helper::BigEndian2Int(substr($MPCheaderData, $packet_offset, 1));
 					$packet_offset += 1;
 					$thisPacket['version'] = $thisPacket['version_major'].'.'.$thisPacket['version_minor'].'.'.$thisPacket['version_build'];
 
@@ -236,11 +242,11 @@ class GetId3_Module_Audio_Mpc extends GetId3_Handler_BaseHandler
 		$MPCheaderData .= fread($this->getid3->fp, $thisfile_mpc_header['size'] - strlen($info['mpc']['header']['preamble']));
 		$offset = strlen('MP+');
 
-		$StreamVersionByte                           = GetId3_Lib_Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 1));
+		$StreamVersionByte                           = Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 1));
 		$offset += 1;
 		$thisfile_mpc_header['stream_version_major'] = ($StreamVersionByte & 0x0F) >> 0;
 		$thisfile_mpc_header['stream_version_minor'] = ($StreamVersionByte & 0xF0) >> 4; // should always be 0, subversions no longer exist in SV8
-		$thisfile_mpc_header['frame_count']          = GetId3_Lib_Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 4));
+		$thisfile_mpc_header['frame_count']          = Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 4));
 		$offset += 4;
 
 		if ($thisfile_mpc_header['stream_version_major'] != 7) {
@@ -248,7 +254,7 @@ class GetId3_Module_Audio_Mpc extends GetId3_Handler_BaseHandler
 			return false;
 		}
 
-		$FlagsDWORD1                                   = GetId3_Lib_Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 4));
+		$FlagsDWORD1                                   = Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 4));
 		$offset += 4;
 		$thisfile_mpc_header['intensity_stereo']       = (bool) (($FlagsDWORD1 & 0x80000000) >> 31);
 		$thisfile_mpc_header['mid_side_stereo']        = (bool) (($FlagsDWORD1 & 0x40000000) >> 30);
@@ -259,25 +265,25 @@ class GetId3_Module_Audio_Mpc extends GetId3_Handler_BaseHandler
 		$thisfile_mpc_header['raw']['sample_rate']     =         ($FlagsDWORD1 & 0x00030000) >> 16;
 		$thisfile_mpc_header['max_level']              =         ($FlagsDWORD1 & 0x0000FFFF);
 
-		$thisfile_mpc_header['raw']['title_peak']      = GetId3_Lib_Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 2));
+		$thisfile_mpc_header['raw']['title_peak']      = Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 2));
 		$offset += 2;
-		$thisfile_mpc_header['raw']['title_gain']      = GetId3_Lib_Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 2), true);
-		$offset += 2;
-
-		$thisfile_mpc_header['raw']['album_peak']      = GetId3_Lib_Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 2));
-		$offset += 2;
-		$thisfile_mpc_header['raw']['album_gain']      = GetId3_Lib_Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 2), true);
+		$thisfile_mpc_header['raw']['title_gain']      = Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 2), true);
 		$offset += 2;
 
-		$FlagsDWORD2                                   = GetId3_Lib_Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 4));
+		$thisfile_mpc_header['raw']['album_peak']      = Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 2));
+		$offset += 2;
+		$thisfile_mpc_header['raw']['album_gain']      = Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 2), true);
+		$offset += 2;
+
+		$FlagsDWORD2                                   = Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 4));
 		$offset += 4;
 		$thisfile_mpc_header['true_gapless']           = (bool) (($FlagsDWORD2 & 0x80000000) >> 31);
 		$thisfile_mpc_header['last_frame_length']      =         ($FlagsDWORD2 & 0x7FF00000) >> 20;
 
 
-		$thisfile_mpc_header['raw']['not_sure_what']   = GetId3_Lib_Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 3));
+		$thisfile_mpc_header['raw']['not_sure_what']   = Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 3));
 		$offset += 3;
-		$thisfile_mpc_header['raw']['encoder_version'] = GetId3_Lib_Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 1));
+		$thisfile_mpc_header['raw']['encoder_version'] = Helper::LittleEndian2Int(substr($MPCheaderData, $offset, 1));
 		$offset += 1;
 
 		$thisfile_mpc_header['profile']     = $this->MPCprofileNameLookup($thisfile_mpc_header['raw']['profile']);
@@ -323,7 +329,7 @@ class GetId3_Module_Audio_Mpc extends GetId3_Handler_BaseHandler
 		if ($thisfile_mpc_header['title_peak'] > 0) {
 			$info['replay_gain']['track']['peak'] = $thisfile_mpc_header['title_peak'];
 		} elseif (round($thisfile_mpc_header['max_level'] * 1.18) > 0) {
-			$info['replay_gain']['track']['peak'] = GetId3_Lib_Helper::CastAsInt(round($thisfile_mpc_header['max_level'] * 1.18)); // why? I don't know - see mppdec.c
+			$info['replay_gain']['track']['peak'] = Helper::CastAsInt(round($thisfile_mpc_header['max_level'] * 1.18)); // why? I don't know - see mppdec.c
 		}
 		if ($thisfile_mpc_header['album_peak'] > 0) {
 			$info['replay_gain']['album']['peak'] = $thisfile_mpc_header['album_peak'];
@@ -356,8 +362,8 @@ class GetId3_Module_Audio_Mpc extends GetId3_Handler_BaseHandler
 		$info['avdataoffset'] += $thisfile_mpc_header['size'];
 
 		// Most of this code adapted from Jurgen Faul's MPEGplus source code - thanks Jurgen! :)
-		$HeaderDWORD[0] = GetId3_Lib_Helper::LittleEndian2Int(substr($MPCheaderData, 0, 4));
-		$HeaderDWORD[1] = GetId3_Lib_Helper::LittleEndian2Int(substr($MPCheaderData, 4, 4));
+		$HeaderDWORD[0] = Helper::LittleEndian2Int(substr($MPCheaderData, 0, 4));
+		$HeaderDWORD[1] = Helper::LittleEndian2Int(substr($MPCheaderData, 4, 4));
 
 
 		// DDDD DDDD  CCCC CCCC  BBBB BBBB  AAAA AAAA

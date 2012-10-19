@@ -1,4 +1,11 @@
 <?php
+
+namespace GetId3\Module\AudioVideo;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -21,7 +28,7 @@
  * @link http://www.getid3.org
  * @link http://www.matroska.org/technical/specs/index.html
  */
-class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
+class Matroska extends BaseHandler
 {
     const EBML_ID_CHAPTERS =                 0x0043A770; // [10][43][A7][70] -- A system to define basic menus and partition data. For more detailed information, look at the Chapters Explanation.
     const EBML_ID_SEEKHEAD =                 0x014D9B74; // [11][4D][9B][74] -- Contains the position of other level 1 elements.
@@ -307,12 +314,12 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 
 						switch ($trackarray['CodecID']) {
 							case 'V_MS/VFW/FOURCC':
-                                if (!class_exists('GetId3_Module_AudioVideo_Riff')) {
-									$this->getid3->warning('Unable to parse codec private data ['.basename(__FILE__).':'.__LINE__.'] because cannot include "' . str_replace('_', DIRECTORY_SEPARATOR, 'GetId3_Module_AudioVideo_Riff') . '.php"');
+                                if (!class_exists('GetId3\Module\AudioVideo\Riff')) {
+									$this->getid3->warning('Unable to parse codec private data ['.basename(__FILE__).':'.__LINE__.'] because cannot include "' . str_replace('_', DIRECTORY_SEPARATOR, 'GetId3\Module\AudioVideo\Riff') . '.php"');
 									break;
 								}
-								$parsed = GetId3_Module_AudioVideo_Riff::ParseBITMAPINFOHEADER($trackarray['CodecPrivate']);
-								$track_info['codec'] = GetId3_Module_AudioVideo_Riff::RIFFfourccLookup($parsed['fourcc']);
+								$parsed = GetId3\Module\AudioVideo\Riff::ParseBITMAPINFOHEADER($trackarray['CodecPrivate']);
+								$track_info['codec'] = GetId3\Module\AudioVideo\Riff::RIFFfourccLookup($parsed['fourcc']);
 								$info['matroska']['track_codec_parsed'][$trackarray['TrackNumber']] = $parsed;
 								break;
 
@@ -361,7 +368,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 							case 'A_MPEG/L3':
 							case 'A_MPEG/L2':
 							case 'A_FLAC':
-                                $class = 'GetId3_Module_Audio_' . ucfirst($track_info['dataformat'] == 'mp2' ? 'mp3' : $track_info['dataformat']);
+                                $class = 'GetId3\\Module\\Audio\\' . ucfirst($track_info['dataformat'] == 'mp2' ? 'mp3' : $track_info['dataformat']);
                                 if (!class_exists($class)) {
 									$this->getid3->warning('Unable to parse audio data ['.basename(__FILE__).':'.__LINE__.'] because cannot include "module.audio.'.$track_info['dataformat'].'.php"');
 									break;
@@ -373,7 +380,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 								}
 
 								// create temp instance
-								$getid3_temp = new GetId3_GetId3();
+								$getid3_temp = new GetId3Core();
 								if ($track_info['dataformat'] != 'flac') {
 									$getid3_temp->openfile($this->getid3->filename);
 								}
@@ -440,16 +447,16 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 								}
 								$vorbis_offset -= 1;
 
-                                if (!class_exists('GetId3_Module_Audio_Ogg')) {
-									$this->getid3->warning('Unable to parse audio data ['.basename(__FILE__).':'.__LINE__.'] because cannot include "module.audio.ogg.php"');
+                                if (!class_exists('GetId3\\Module\\Audio\\Ogg')) {
+									$this->getid3->warning('Unable to parse audio data ['.basename(__FILE__).':'.__LINE__.'] because cannot include "GetId3\\Module\\Audio\\Ogg.php"');
 									break;
 								}
 
 								// create temp instance
-								$getid3_temp = new GetId3_GetId3();
+								$getid3_temp = new GetId3Core();
 
 								// analyze
-								$getid3_ogg = new GetId3_Module_Audio_Ogg($getid3_temp);
+								$getid3_ogg = new GetId3\Module\Audio\Ogg($getid3_temp);
 								$oggpageinfo['page_seqno'] = 0;
 								$getid3_ogg->ParseVorbisPageHeader($trackarray['CodecPrivate'], $vorbis_offset, $oggpageinfo);
 								if (!empty($getid3_temp->info['ogg'])) {
@@ -480,12 +487,12 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 								break;
 
 							case 'A_MS/ACM':
-                                if (!class_exists('GetId3_Module_AudioVideo_Riff')) {
-									$this->getid3->warning('Unable to parse audio data ['.basename(__FILE__).':'.__LINE__.'] because cannot include "' . str_replace('_', DIRECTORY_SEPARATOR, 'GetId3_Module_AudioVideo_Riff') . '.php"');
+                                if (!class_exists('GetId3\Module\AudioVideo\Riff')) {
+									$this->getid3->warning('Unable to parse audio data ['.basename(__FILE__).':'.__LINE__.'] because cannot include "' . str_replace('_', DIRECTORY_SEPARATOR, 'GetId3\Module\AudioVideo\Riff') . '.php"');
 									break;
 								}
 
-								$parsed = GetId3_Module_AudioVideo_Riff::RIFFparseWAVEFORMATex($trackarray['CodecPrivate']);
+								$parsed = GetId3\Module\AudioVideo\Riff::RIFFparseWAVEFORMATex($trackarray['CodecPrivate']);
 								foreach ($parsed as $key => $value) {
 									if ($key != 'raw') {
 										$track_info[$key] = $value;
@@ -553,11 +560,11 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 							case self::EBML_ID_EBMLMAXSIZELENGTH:
 							case self::EBML_ID_DOCTYPEVERSION:
 							case self::EBML_ID_DOCTYPEREADVERSION:
-								$element_data['data'] = GetId3_Lib_Helper::BigEndian2Int($element_data['data']);
+								$element_data['data'] = Helper::BigEndian2Int($element_data['data']);
 								break;
 
 							case self::EBML_ID_DOCTYPE:
-								$element_data['data'] = GetId3_Lib_Helper::trimNullByte($element_data['data']);
+								$element_data['data'] = Helper::trimNullByte($element_data['data']);
 								$info['matroska']['doctype'] = $element_data['data'];
 								break;
 
@@ -602,7 +609,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 														break;
 
 													case self::EBML_ID_SEEKPOSITION:
-														$seek_entry['target_offset'] = $element_data['offset'] + GetId3_Lib_Helper::BigEndian2Int($sub_seek_entry['data']);
+														$seek_entry['target_offset'] = $element_data['offset'] + Helper::BigEndian2Int($sub_seek_entry['data']);
 														break;
 
 													default:
@@ -638,18 +645,18 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 													case self::EBML_ID_MAXCACHE:
 													case self::EBML_ID_MAXBLOCKADDITIONID:
 													case self::EBML_ID_DEFAULTDURATION: // nanoseconds per frame
-														$track_entry[$subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($subelement['data']);
+														$track_entry[$subelement['id_name']] = Helper::BigEndian2Int($subelement['data']);
 														break;
 
 													case self::EBML_ID_TRACKTIMECODESCALE:
-														$track_entry[$subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Float($subelement['data']);
+														$track_entry[$subelement['id_name']] = Helper::BigEndian2Float($subelement['data']);
 														break;
 
 													case self::EBML_ID_CODECID:
 													case self::EBML_ID_LANGUAGE:
 													case self::EBML_ID_NAME:
 													case self::EBML_ID_CODECNAME:
-														$track_entry[$subelement['id_name']] = GetId3_Lib_Helper::trimNullByte($subelement['data']);
+														$track_entry[$subelement['id_name']] = Helper::trimNullByte($subelement['data']);
 														break;
 
 													case self::EBML_ID_CODECPRIVATE:
@@ -661,7 +668,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 													case self::EBML_ID_FLAGFORCED:
 													case self::EBML_ID_FLAGLACING:
 													case self::EBML_ID_CODECDECODEALL:
-														$track_entry[$subelement['id_name']] = (bool) GetId3_Lib_Helper::BigEndian2Int($subelement['data']);
+														$track_entry[$subelement['id_name']] = (bool) Helper::BigEndian2Int($subelement['data']);
 														break;
 
 													case self::EBML_ID_VIDEO:
@@ -680,19 +687,19 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 																case self::EBML_ID_DISPLAYHEIGHT:
 																case self::EBML_ID_DISPLAYUNIT:
 																case self::EBML_ID_ASPECTRATIOTYPE:
-																	$track_entry[$sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_subelement['data']);
+																	$track_entry[$sub_subelement['id_name']] = Helper::BigEndian2Int($sub_subelement['data']);
 																	break;
 
 																case self::EBML_ID_FLAGINTERLACED:
-																	$track_entry[$sub_subelement['id_name']] = (bool)GetId3_Lib_Helper::BigEndian2Int($sub_subelement['data']);
+																	$track_entry[$sub_subelement['id_name']] = (bool)Helper::BigEndian2Int($sub_subelement['data']);
 																	break;
 
 																case self::EBML_ID_GAMMAVALUE:
-																	$track_entry[$sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Float($sub_subelement['data']);
+																	$track_entry[$sub_subelement['id_name']] = Helper::BigEndian2Float($sub_subelement['data']);
 																	break;
 
 																case self::EBML_ID_COLOURSPACE:
-																	$track_entry[$sub_subelement['id_name']] = GetId3_Lib_Helper::trimNullByte($sub_subelement['data']);
+																	$track_entry[$sub_subelement['id_name']] = Helper::trimNullByte($sub_subelement['data']);
 																	break;
 
 																default:
@@ -708,16 +715,16 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 
 																case self::EBML_ID_CHANNELS:
 																case self::EBML_ID_BITDEPTH:
-																	$track_entry[$sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_subelement['data']);
+																	$track_entry[$sub_subelement['id_name']] = Helper::BigEndian2Int($sub_subelement['data']);
 																	break;
 
 																case self::EBML_ID_SAMPLINGFREQUENCY:
 																case self::EBML_ID_OUTPUTSAMPLINGFREQUENCY:
-																	$track_entry[$sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Float($sub_subelement['data']);
+																	$track_entry[$sub_subelement['id_name']] = Helper::BigEndian2Float($sub_subelement['data']);
 																	break;
 
 																case self::EBML_ID_CHANNELPOSITIONS:
-																	$track_entry[$sub_subelement['id_name']] = GetId3_Lib_Helper::trimNullByte($sub_subelement['data']);
+																	$track_entry[$sub_subelement['id_name']] = Helper::trimNullByte($sub_subelement['data']);
 																	break;
 
 																default:
@@ -739,7 +746,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 																			case self::EBML_ID_CONTENTENCODINGORDER:
 																			case self::EBML_ID_CONTENTENCODINGSCOPE:
 																			case self::EBML_ID_CONTENTENCODINGTYPE:
-																				$track_entry[$sub_subelement['id_name']][$sub_sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_sub_subelement['data']);
+																				$track_entry[$sub_subelement['id_name']][$sub_sub_subelement['id_name']] = Helper::BigEndian2Int($sub_sub_subelement['data']);
 																				break;
 
 																			case self::EBML_ID_CONTENTCOMPRESSION:
@@ -748,7 +755,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 																					switch ($sub_sub_sub_subelement['id']) {
 
 																						case self::EBML_ID_CONTENTCOMPALGO:
-																							$track_entry[$sub_subelement['id_name']][$sub_sub_subelement['id_name']][$sub_sub_sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_sub_sub_subelement['data']);
+																							$track_entry[$sub_subelement['id_name']][$sub_sub_subelement['id_name']][$sub_sub_sub_subelement['id_name']] = Helper::BigEndian2Int($sub_sub_sub_subelement['data']);
 																							break;
 
 																						case self::EBML_ID_CONTENTCOMPSETTINGS:
@@ -769,7 +776,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 																						case self::EBML_ID_CONTENTENCALGO:
 																						case self::EBML_ID_CONTENTSIGALGO:
 																						case self::EBML_ID_CONTENTSIGHASHALGO:
-																							$track_entry[$sub_subelement['id_name']][$sub_sub_subelement['id_name']][$sub_sub_sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_sub_sub_subelement['data']);
+																							$track_entry[$sub_subelement['id_name']][$sub_sub_subelement['id_name']][$sub_sub_sub_subelement['id_name']] = Helper::BigEndian2Int($sub_sub_sub_subelement['data']);
 																							break;
 
 																						case self::EBML_ID_CONTENTENCKEYID:
@@ -817,26 +824,26 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 									switch ($subelement['id']) {
 
 										case self::EBML_ID_TIMECODESCALE:
-											$info_entry[$subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($subelement['data']);
+											$info_entry[$subelement['id_name']] = Helper::BigEndian2Int($subelement['data']);
 											break;
 
 										case self::EBML_ID_DURATION:
-											$info_entry[$subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Float($subelement['data']);
+											$info_entry[$subelement['id_name']] = Helper::BigEndian2Float($subelement['data']);
 											break;
 
 										case self::EBML_ID_DATEUTC:
-											$info_entry[$subelement['id_name']]         = GetId3_Lib_Helper::BigEndian2Int($subelement['data']);
+											$info_entry[$subelement['id_name']]         = Helper::BigEndian2Int($subelement['data']);
 											$info_entry[$subelement['id_name'].'_unix'] = self::EBMLdate2unix($info_entry[$subelement['id_name']]);
 											break;
 
 										case self::EBML_ID_SEGMENTUID:
 										case self::EBML_ID_PREVUID:
 										case self::EBML_ID_NEXTUID:
-											$info_entry[$subelement['id_name']] = GetId3_Lib_Helper::trimNullByte($subelement['data']);
+											$info_entry[$subelement['id_name']] = Helper::trimNullByte($subelement['data']);
 											break;
 
 										case self::EBML_ID_SEGMENTFAMILY:
-											$info_entry[$subelement['id_name']][] = GetId3_Lib_Helper::trimNullByte($subelement['data']);
+											$info_entry[$subelement['id_name']][] = Helper::trimNullByte($subelement['data']);
 											break;
 
 										case self::EBML_ID_SEGMENTFILENAME:
@@ -845,7 +852,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 										case self::EBML_ID_TITLE:
 										case self::EBML_ID_MUXINGAPP:
 										case self::EBML_ID_WRITINGAPP:
-											$info_entry[$subelement['id_name']] = GetId3_Lib_Helper::trimNullByte($subelement['data']);
+											$info_entry[$subelement['id_name']] = Helper::trimNullByte($subelement['data']);
 											$info['matroska']['comments'][strtolower($subelement['id_name'])][] = $info_entry[$subelement['id_name']];
 											break;
 
@@ -856,15 +863,15 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 												switch ($sub_subelement['id']) {
 
 													case self::EBML_ID_CHAPTERTRANSLATEEDITIONUID:
-														$chaptertranslate_entry[$sub_subelement['id_name']][] = GetId3_Lib_Helper::BigEndian2Int($sub_subelement['data']);
+														$chaptertranslate_entry[$sub_subelement['id_name']][] = Helper::BigEndian2Int($sub_subelement['data']);
 														break;
 
 													case self::EBML_ID_CHAPTERTRANSLATECODEC:
-														$chaptertranslate_entry[$sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_subelement['data']);
+														$chaptertranslate_entry[$sub_subelement['id_name']] = Helper::BigEndian2Int($sub_subelement['data']);
 														break;
 
 													case self::EBML_ID_CHAPTERTRANSLATEID:
-														$chaptertranslate_entry[$sub_subelement['id_name']] = GetId3_Lib_Helper::trimNullByte($sub_subelement['data']);
+														$chaptertranslate_entry[$sub_subelement['id_name']] = Helper::trimNullByte($sub_subelement['data']);
 														break;
 
 													default:
@@ -907,7 +914,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 																case self::EBML_ID_CUECLUSTERPOSITION:
 																case self::EBML_ID_CUEBLOCKNUMBER:
 																case self::EBML_ID_CUECODECSTATE:
-																	$cuetrackpositions_entry[$sub_sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_sub_subelement['data']);
+																	$cuetrackpositions_entry[$sub_sub_subelement['id_name']] = Helper::BigEndian2Int($sub_sub_subelement['data']);
 																	break;
 
 																default:
@@ -918,7 +925,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 														break;
 
 													case self::EBML_ID_CUETIME:
-														$cuepoint_entry[$sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_subelement['data']);
+														$cuepoint_entry[$sub_subelement['id_name']] = Helper::BigEndian2Int($sub_subelement['data']);
 														break;
 
 													default:
@@ -954,7 +961,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 															switch ($sub_sub_subelement['id']) {
 
 																case self::EBML_ID_TARGETTYPEVALUE:
-																	$targets_entry[$sub_sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_sub_subelement['data']);
+																	$targets_entry[$sub_sub_subelement['id_name']] = Helper::BigEndian2Int($sub_sub_subelement['data']);
 																	$targets_entry[strtolower($sub_sub_subelement['id_name']).'_long'] = self::MatroskaTargetTypeValue($targets_entry[$sub_sub_subelement['id_name']]);
 																	break;
 
@@ -966,7 +973,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 																case self::EBML_ID_TAGEDITIONUID:
 																case self::EBML_ID_TAGCHAPTERUID:
 																case self::EBML_ID_TAGATTACHMENTUID:
-																	$targets_entry[$sub_sub_subelement['id_name']][] = GetId3_Lib_Helper::BigEndian2Int($sub_sub_subelement['data']);
+																	$targets_entry[$sub_sub_subelement['id_name']][] = Helper::BigEndian2Int($sub_sub_subelement['data']);
 																	break;
 
 																default:
@@ -1025,7 +1032,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 														break;
 
 													case self::EBML_ID_FILEUID:
-														$attachedfile_entry[$sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_subelement['data']);
+														$attachedfile_entry[$sub_subelement['id_name']] = Helper::BigEndian2Int($sub_subelement['data']);
 														break;
 
 													default:
@@ -1033,7 +1040,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 												}
 											}
 											if (!empty($attachedfile_entry['FileData']) && !empty($attachedfile_entry['FileMimeType']) && preg_match('#^image/#i', $attachedfile_entry['FileMimeType'])) {
-												if ($this->getid3->option_save_attachments === GetId3_GetId3::ATTACHMENTS_INLINE) {
+												if ($this->getid3->option_save_attachments === GetId3Core::ATTACHMENTS_INLINE) {
 													$attachedfile_entry['data']       = $attachedfile_entry['FileData'];
 													$attachedfile_entry['image_mime'] = $attachedfile_entry['FileMimeType'];
 													$info['matroska']['comments']['picture'][] = array('data' => $attachedfile_entry['data'], 'image_mime' => $attachedfile_entry['image_mime'], 'filename' => $attachedfile_entry['FileName']);
@@ -1065,13 +1072,13 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 												switch ($sub_subelement['id']) {
 
 													case self::EBML_ID_EDITIONUID:
-														$editionentry_entry[$sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_subelement['data']);
+														$editionentry_entry[$sub_subelement['id_name']] = Helper::BigEndian2Int($sub_subelement['data']);
 														break;
 
 													case self::EBML_ID_EDITIONFLAGHIDDEN:
 													case self::EBML_ID_EDITIONFLAGDEFAULT:
 													case self::EBML_ID_EDITIONFLAGORDERED:
-														$editionentry_entry[$sub_subelement['id_name']] = (bool)GetId3_Lib_Helper::BigEndian2Int($sub_subelement['data']);
+														$editionentry_entry[$sub_subelement['id_name']] = (bool)Helper::BigEndian2Int($sub_subelement['data']);
 														break;
 
 													case self::EBML_ID_CHAPTERATOM:
@@ -1087,13 +1094,13 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 
 																case self::EBML_ID_CHAPTERFLAGENABLED:
 																case self::EBML_ID_CHAPTERFLAGHIDDEN:
-																	$chapteratom_entry[$sub_sub_subelement['id_name']] = (bool)GetId3_Lib_Helper::BigEndian2Int($sub_sub_subelement['data']);
+																	$chapteratom_entry[$sub_sub_subelement['id_name']] = (bool)Helper::BigEndian2Int($sub_sub_subelement['data']);
 																	break;
 
 																case self::EBML_ID_CHAPTERUID:
 																case self::EBML_ID_CHAPTERTIMESTART:
 																case self::EBML_ID_CHAPTERTIMEEND:
-																	$chapteratom_entry[$sub_sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_sub_subelement['data']);
+																	$chapteratom_entry[$sub_sub_subelement['id_name']] = Helper::BigEndian2Int($sub_sub_subelement['data']);
 																	break;
 
 																case self::EBML_ID_CHAPTERTRACK:
@@ -1103,7 +1110,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 																		switch ($sub_sub_sub_subelement['id']) {
 
 																			case self::EBML_ID_CHAPTERTRACKNUMBER:
-																				$chaptertrack_entry[$sub_sub_sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_sub_sub_subelement['data']);
+																				$chaptertrack_entry[$sub_sub_sub_subelement['id_name']] = Helper::BigEndian2Int($sub_sub_sub_subelement['data']);
 																				break;
 
 																			default:
@@ -1161,7 +1168,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 										case self::EBML_ID_CLUSTERTIMECODE:
 										case self::EBML_ID_CLUSTERPOSITION:
 										case self::EBML_ID_CLUSTERPREVSIZE:
-											$cluster_entry[$subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($subelement['data']);
+											$cluster_entry[$subelement['id_name']] = Helper::BigEndian2Int($subelement['data']);
 											break;
 
 										case self::EBML_ID_CLUSTERSILENTTRACKS:
@@ -1171,7 +1178,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 												switch ($sub_subelement['id']) {
 
 													case self::EBML_ID_CLUSTERSILENTTRACKNUMBER:
-														$cluster_silent_tracks[] = GetId3_Lib_Helper::BigEndian2Int($sub_subelement['data']);
+														$cluster_silent_tracks[] = Helper::BigEndian2Int($sub_subelement['data']);
 														break;
 
 													default:
@@ -1193,15 +1200,15 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 
 													case self::EBML_ID_CLUSTERREFERENCEPRIORITY: // unsigned-int
 													case self::EBML_ID_CLUSTERBLOCKDURATION:     // unsigned-int
-														$cluster_block_group[$sub_subelement['id_name']] = GetId3_Lib_Helper::BigEndian2Int($sub_subelement['data']);
+														$cluster_block_group[$sub_subelement['id_name']] = Helper::BigEndian2Int($sub_subelement['data']);
 														break;
 
 													case self::EBML_ID_CLUSTERREFERENCEBLOCK:    // signed-int
-														$cluster_block_group[$sub_subelement['id_name']][] = GetId3_Lib_Helper::BigEndian2Int($sub_subelement['data'], false, true);
+														$cluster_block_group[$sub_subelement['id_name']][] = Helper::BigEndian2Int($sub_subelement['data'], false, true);
 														break;
 
 													case self::EBML_ID_CLUSTERCODECSTATE:
-														$cluster_block_group[$sub_subelement['id_name']] = GetId3_Lib_Helper::trimNullByte($sub_subelement['data']);
+														$cluster_block_group[$sub_subelement['id_name']] = Helper::trimNullByte($sub_subelement['data']);
 														break;
 
 													default:
@@ -1257,7 +1264,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 	{
 		if (($this->current_offset - $this->EBMLbuffer_offset) >= ($this->EBMLbuffer_length - $min_data)) {
 
-			if (!GetId3_Lib_Helper::intValueSupported($this->current_offset + $this->getid3->fread_buffer_size())) {
+			if (!Helper::intValueSupported($this->current_offset + $this->getid3->fread_buffer_size())) {
 				$this->getid3->info['error'][] = 'EBML parser: cannot read past '.$this->current_offset;
 				return false;
 			}
@@ -1435,7 +1442,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 					break;
 
 				case self::EBML_ID_TAGDEFAULT:
-					$simpletag_entry[$element['id_name']] = (bool)GetId3_Lib_Helper::BigEndian2Int($element['data']);
+					$simpletag_entry[$element['id_name']] = (bool)Helper::BigEndian2Int($element['data']);
 					break;
 
 				default:
@@ -1459,8 +1466,8 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 	{
 		$block_data = array();
 		$block_data['tracknumber'] = $this->readEBMLint();
-		$block_data['timecode']    = GetId3_Lib_Helper::BigEndian2Int($this->readEBMLelementData(2), false, true);
-		$block_data['flags_raw']   = GetId3_Lib_Helper::BigEndian2Int($this->readEBMLelementData(1));
+		$block_data['timecode']    = Helper::BigEndian2Int($this->readEBMLelementData(2), false, true);
+		$block_data['flags_raw']   = Helper::BigEndian2Int($this->readEBMLelementData(1));
 
 		if ($block_type == self::EBML_ID_CLUSTERSIMPLEBLOCK) {
 			$block_data['flags']['keyframe']  = (($block_data['flags_raw'] & 0x80) >> 7);
@@ -1481,7 +1488,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 
         // Lace (when lacing bit is set)
 		if ($block_data['flags']['lacing'] > 0) {
-			$block_data['lace_frames'] = GetId3_Lib_Helper::BigEndian2Int($this->readEBMLelementData(1)) + 1; // Number of frames in the lace-1 (uint8)
+			$block_data['lace_frames'] = Helper::BigEndian2Int($this->readEBMLelementData(1)) + 1; // Number of frames in the lace-1 (uint8)
 			if ($block_data['flags']['lacing'] != 0x02) {
 				for ($i = 1; $i < $block_data['lace_frames']; $i ++) { // Lace-coded size of each frame of the lace, except for the last one (multiple uint8). *This is not used with Fixed-size lacing as it is calculated automatically from (total size of lace) / (number of frames in lace).
 					if ($block_data['flags']['lacing'] == 0x03) { // EBML lacing
@@ -1490,7 +1497,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 					else { // Xiph lacing
 						$block_data['lace_frames_size'][$i] = 0;
 						do {
-							$size = GetId3_Lib_Helper::BigEndian2Int($this->readEBMLelementData(1));
+							$size = Helper::BigEndian2Int($this->readEBMLelementData(1));
 							$block_data['lace_frames_size'][$i] += $size;
 						}
 						while ($size == 255);
@@ -1560,7 +1567,7 @@ class GetId3_Module_AudioVideo_Matroska extends GetId3_Handler_BaseHandler
 			$EBMLstring[0] = chr($first_byte_int & 0x00);
 		}
 
-		return GetId3_Lib_Helper::BigEndian2Int($EBMLstring);
+		return Helper::BigEndian2Int($EBMLstring);
 	}
 
     /**

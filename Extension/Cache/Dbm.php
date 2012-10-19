@@ -1,4 +1,9 @@
 <?php
+
+namespace GetId3\Extension\Cache;
+
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -75,7 +80,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Extension_Cache_Dbm extends GetId3_GetId3
+class Dbm extends GetId3
 {
 
     /**
@@ -133,7 +138,7 @@ class GetId3_Extension_Cache_Dbm extends GetId3_GetId3
 			}
 
 			// Insert GetId3 version number
-			dba_insert(GetId3_GetId3::VERSION, GetId3_GetId3::VERSION, $this->dba);
+			dba_insert(GetId3Core::VERSION, GetId3Core::VERSION, $this->dba);
 		}
 
 		// Init misc values
@@ -144,7 +149,7 @@ class GetId3_Extension_Cache_Dbm extends GetId3_GetId3
 		register_shutdown_function(array($this, '__destruct'));
 
 		// Check version number and clear cache if changed
-		if (dba_fetch(GetId3_GetId3::VERSION, $this->dba) != GetId3_GetId3::VERSION) {
+		if (dba_fetch(GetId3Core::VERSION, $this->dba) != GetId3Core::VERSION) {
 			$this->clear_cache();
 		}
 
@@ -184,7 +189,7 @@ class GetId3_Extension_Cache_Dbm extends GetId3_GetId3
 		}
 
 		// Insert GetId3 version number
-		dba_insert(GetId3_GetId3::VERSION, GetId3_GetId3::VERSION, $this->dba);
+		dba_insert(GetId3Core::VERSION, GetId3Core::VERSION, $this->dba);
 
 		// Re-register shutdown function
 		register_shutdown_function(array($this, '__destruct'));

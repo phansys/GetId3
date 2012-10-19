@@ -22,7 +22,7 @@ $getID3->setOption(array('encoding'=>$TaggingFormat));
 
 require_once('../getid3/write.php');
 // Initialize getID3 tag-writing module
-$tagwriter = new GetId3_Write_Tags;
+$tagwriter = new GetId3\Write\Tags;
 //$tagwriter->filename = '/path/to/file.mp3';
 $tagwriter->filename = 'd:/file.mp3';
 															$tagwriter->filename       = 'P:/webroot/_dev/getID3/testfiles/_writing/2011-02-02/test.mp3';

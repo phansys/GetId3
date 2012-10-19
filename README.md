@@ -45,7 +45,7 @@ Add the `GetId3` namespace to your autoloader:
 
 $loader->registerPrefixes(array(
     // ...
-        'GetId3_' => __DIR__.'/../vendor/phansys/getid3/GetId3',
+        'GetId3' => __DIR__.'/../vendor/phansys/getid3/GetId3',
         ));
 ```
 ___
@@ -76,7 +76,7 @@ Quick use example reading audio properties
 <?php
 namespace My\Project;
 
-use \GetId3_GetId3 as GetId3;
+use \GetId3\GetId3Core as GetId3;
 
 class MyClass
 {

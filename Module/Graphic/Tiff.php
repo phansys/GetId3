@@ -1,4 +1,9 @@
 <?php
+
+namespace GetId3\Module\Graphic;
+
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +25,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Graphic_Tiff extends GetId3_Handler_BaseHandler
+class Tiff extends GetId3\Handler\BaseHandler
 {
 
     /**
@@ -199,9 +204,9 @@ class GetId3_Module_Graphic_Tiff extends GetId3_Handler_BaseHandler
      */
 	public function TIFFendian2Int($bytestring, $byteorder) {
 		if ($byteorder == 'Intel') {
-			return GetId3_Lib_Helper::LittleEndian2Int($bytestring);
+			return Helper::LittleEndian2Int($bytestring);
 		} elseif ($byteorder == 'Motorola') {
-			return GetId3_Lib_Helper::BigEndian2Int($bytestring);
+			return Helper::BigEndian2Int($bytestring);
 		}
 		return false;
 	}

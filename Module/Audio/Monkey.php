@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Monkey extends GetId3_Handler_BaseHandler
+class Monkey extends BaseHandler
 {
 
     /**
@@ -48,60 +54,60 @@ class GetId3_Module_Audio_Monkey extends GetId3_Handler_BaseHandler
 		$thisfile_monkeysaudio_raw['magic'] = substr($MACheaderData, 0, 4);
 		$magic = 'MAC ';
 		if ($thisfile_monkeysaudio_raw['magic'] != $magic) {
-			$info['error'][] = 'Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes($thisfile_monkeysaudio_raw['magic']).'"';
+			$info['error'][] = 'Expecting "'.Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes($thisfile_monkeysaudio_raw['magic']).'"';
 			unset($info['fileformat']);
 			return false;
 		}
-		$thisfile_monkeysaudio_raw['nVersion']             = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, 4, 2)); // appears to be uint32 in 3.98+
+		$thisfile_monkeysaudio_raw['nVersion']             = Helper::LittleEndian2Int(substr($MACheaderData, 4, 2)); // appears to be uint32 in 3.98+
 
 		if ($thisfile_monkeysaudio_raw['nVersion'] < 3980) {
-			$thisfile_monkeysaudio_raw['nCompressionLevel']    = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, 6, 2));
-			$thisfile_monkeysaudio_raw['nFormatFlags']         = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, 8, 2));
-			$thisfile_monkeysaudio_raw['nChannels']            = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, 10, 2));
-			$thisfile_monkeysaudio_raw['nSampleRate']          = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, 12, 4));
-			$thisfile_monkeysaudio_raw['nHeaderDataBytes']     = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, 16, 4));
-			$thisfile_monkeysaudio_raw['nWAVTerminatingBytes'] = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, 20, 4));
-			$thisfile_monkeysaudio_raw['nTotalFrames']         = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, 24, 4));
-			$thisfile_monkeysaudio_raw['nFinalFrameSamples']   = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, 28, 4));
-			$thisfile_monkeysaudio_raw['nPeakLevel']           = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, 32, 4));
-			$thisfile_monkeysaudio_raw['nSeekElements']        = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, 38, 2));
+			$thisfile_monkeysaudio_raw['nCompressionLevel']    = Helper::LittleEndian2Int(substr($MACheaderData, 6, 2));
+			$thisfile_monkeysaudio_raw['nFormatFlags']         = Helper::LittleEndian2Int(substr($MACheaderData, 8, 2));
+			$thisfile_monkeysaudio_raw['nChannels']            = Helper::LittleEndian2Int(substr($MACheaderData, 10, 2));
+			$thisfile_monkeysaudio_raw['nSampleRate']          = Helper::LittleEndian2Int(substr($MACheaderData, 12, 4));
+			$thisfile_monkeysaudio_raw['nHeaderDataBytes']     = Helper::LittleEndian2Int(substr($MACheaderData, 16, 4));
+			$thisfile_monkeysaudio_raw['nWAVTerminatingBytes'] = Helper::LittleEndian2Int(substr($MACheaderData, 20, 4));
+			$thisfile_monkeysaudio_raw['nTotalFrames']         = Helper::LittleEndian2Int(substr($MACheaderData, 24, 4));
+			$thisfile_monkeysaudio_raw['nFinalFrameSamples']   = Helper::LittleEndian2Int(substr($MACheaderData, 28, 4));
+			$thisfile_monkeysaudio_raw['nPeakLevel']           = Helper::LittleEndian2Int(substr($MACheaderData, 32, 4));
+			$thisfile_monkeysaudio_raw['nSeekElements']        = Helper::LittleEndian2Int(substr($MACheaderData, 38, 2));
 			$offset = 8;
 		} else {
 			$offset = 8;
 			// APE_DESCRIPTOR
-			$thisfile_monkeysaudio_raw['nDescriptorBytes']       = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
+			$thisfile_monkeysaudio_raw['nDescriptorBytes']       = Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
 			$offset += 4;
-			$thisfile_monkeysaudio_raw['nHeaderBytes']           = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
+			$thisfile_monkeysaudio_raw['nHeaderBytes']           = Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
 			$offset += 4;
-			$thisfile_monkeysaudio_raw['nSeekTableBytes']        = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
+			$thisfile_monkeysaudio_raw['nSeekTableBytes']        = Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
 			$offset += 4;
-			$thisfile_monkeysaudio_raw['nHeaderDataBytes']       = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
+			$thisfile_monkeysaudio_raw['nHeaderDataBytes']       = Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
 			$offset += 4;
-			$thisfile_monkeysaudio_raw['nAPEFrameDataBytes']     = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
+			$thisfile_monkeysaudio_raw['nAPEFrameDataBytes']     = Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
 			$offset += 4;
-			$thisfile_monkeysaudio_raw['nAPEFrameDataBytesHigh'] = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
+			$thisfile_monkeysaudio_raw['nAPEFrameDataBytesHigh'] = Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
 			$offset += 4;
-			$thisfile_monkeysaudio_raw['nTerminatingDataBytes']  = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
+			$thisfile_monkeysaudio_raw['nTerminatingDataBytes']  = Helper::LittleEndian2Int(substr($MACheaderData, $offset,  4));
 			$offset += 4;
 			$thisfile_monkeysaudio_raw['cFileMD5']               =                              substr($MACheaderData, $offset, 16);
 			$offset += 16;
 
 			// APE_HEADER
-			$thisfile_monkeysaudio_raw['nCompressionLevel']    = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset, 2));
+			$thisfile_monkeysaudio_raw['nCompressionLevel']    = Helper::LittleEndian2Int(substr($MACheaderData, $offset, 2));
 			$offset += 2;
-			$thisfile_monkeysaudio_raw['nFormatFlags']         = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset, 2));
+			$thisfile_monkeysaudio_raw['nFormatFlags']         = Helper::LittleEndian2Int(substr($MACheaderData, $offset, 2));
 			$offset += 2;
-			$thisfile_monkeysaudio_raw['nBlocksPerFrame']      = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset, 4));
+			$thisfile_monkeysaudio_raw['nBlocksPerFrame']      = Helper::LittleEndian2Int(substr($MACheaderData, $offset, 4));
 			$offset += 4;
-			$thisfile_monkeysaudio_raw['nFinalFrameBlocks']    = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset, 4));
+			$thisfile_monkeysaudio_raw['nFinalFrameBlocks']    = Helper::LittleEndian2Int(substr($MACheaderData, $offset, 4));
 			$offset += 4;
-			$thisfile_monkeysaudio_raw['nTotalFrames']         = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset, 4));
+			$thisfile_monkeysaudio_raw['nTotalFrames']         = Helper::LittleEndian2Int(substr($MACheaderData, $offset, 4));
 			$offset += 4;
-			$thisfile_monkeysaudio_raw['nBitsPerSample']       = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset, 2));
+			$thisfile_monkeysaudio_raw['nBitsPerSample']       = Helper::LittleEndian2Int(substr($MACheaderData, $offset, 2));
 			$offset += 2;
-			$thisfile_monkeysaudio_raw['nChannels']            = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset, 2));
+			$thisfile_monkeysaudio_raw['nChannels']            = Helper::LittleEndian2Int(substr($MACheaderData, $offset, 2));
 			$offset += 2;
-			$thisfile_monkeysaudio_raw['nSampleRate']          = GetId3_Lib_Helper::LittleEndian2Int(substr($MACheaderData, $offset, 4));
+			$thisfile_monkeysaudio_raw['nSampleRate']          = Helper::LittleEndian2Int(substr($MACheaderData, $offset, 4));
 			$offset += 4;
 		}
 

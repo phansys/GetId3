@@ -1,4 +1,11 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +27,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Wavpack extends GetId3_Handler_BaseHandler
+class Wavpack extends BaseHandler
 {
 
     /**
@@ -52,11 +59,11 @@ class GetId3_Module_Audio_Wavpack extends GetId3_Handler_BaseHandler
 
 			$blockheader_offset = ftell($this->getid3->fp) - 32;
 			$blockheader_magic  =                              substr($wavpackheader,  0,  4);
-			$blockheader_size   = GetId3_Lib_Helper::LittleEndian2Int(substr($wavpackheader,  4,  4));
+			$blockheader_size   = Helper::LittleEndian2Int(substr($wavpackheader,  4,  4));
 
 			$magic = 'wvpk';
 			if ($blockheader_magic != $magic) {
-				$info['error'][] = 'Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" at offset '.$blockheader_offset.', found "'.GetId3_Lib_Helper::PrintHexBytes($blockheader_magic).'"';
+				$info['error'][] = 'Expecting "'.Helper::PrintHexBytes($magic).'" at offset '.$blockheader_offset.', found "'.Helper::PrintHexBytes($blockheader_magic).'"';
 				switch (isset($info['audio']['dataformat']) ? $info['audio']['dataformat'] : '') {
 					case 'wavpack':
 					case 'wvc':
@@ -131,11 +138,11 @@ class GetId3_Module_Audio_Wavpack extends GetId3_Handler_BaseHandler
 
 				$info['wavpack']['blockheader']['track_number']  = ord($wavpackheader{10}); // unused
 				$info['wavpack']['blockheader']['index_number']  = ord($wavpackheader{11}); // unused
-				$info['wavpack']['blockheader']['total_samples'] = GetId3_Lib_Helper::LittleEndian2Int(substr($wavpackheader, 12,  4));
-				$info['wavpack']['blockheader']['block_index']   = GetId3_Lib_Helper::LittleEndian2Int(substr($wavpackheader, 16,  4));
-				$info['wavpack']['blockheader']['block_samples'] = GetId3_Lib_Helper::LittleEndian2Int(substr($wavpackheader, 20,  4));
-				$info['wavpack']['blockheader']['flags_raw']     = GetId3_Lib_Helper::LittleEndian2Int(substr($wavpackheader, 24,  4));
-				$info['wavpack']['blockheader']['crc']           = GetId3_Lib_Helper::LittleEndian2Int(substr($wavpackheader, 28,  4));
+				$info['wavpack']['blockheader']['total_samples'] = Helper::LittleEndian2Int(substr($wavpackheader, 12,  4));
+				$info['wavpack']['blockheader']['block_index']   = Helper::LittleEndian2Int(substr($wavpackheader, 16,  4));
+				$info['wavpack']['blockheader']['block_samples'] = Helper::LittleEndian2Int(substr($wavpackheader, 20,  4));
+				$info['wavpack']['blockheader']['flags_raw']     = Helper::LittleEndian2Int(substr($wavpackheader, 24,  4));
+				$info['wavpack']['blockheader']['crc']           = Helper::LittleEndian2Int(substr($wavpackheader, 28,  4));
 
 				$info['wavpack']['blockheader']['flags']['bytes_per_sample']     =    1 + ($info['wavpack']['blockheader']['flags_raw'] & 0x00000003);
 				$info['wavpack']['blockheader']['flags']['mono']                 = (bool) ($info['wavpack']['blockheader']['flags_raw'] & 0x00000004);
@@ -178,7 +185,7 @@ class GetId3_Module_Audio_Wavpack extends GetId3_Handler_BaseHandler
 				if ($metablock['large_block']) {
 					$metablockheader .= fread($this->getid3->fp, 2);
 				}
-				$metablock['size'] = GetId3_Lib_Helper::LittleEndian2Int(substr($metablockheader, 1)) * 2; // size is stored in words
+				$metablock['size'] = Helper::LittleEndian2Int(substr($metablockheader, 1)) * 2; // size is stored in words
 				$metablock['data'] = null;
 
 				if ($metablock['size'] > 0) {
@@ -224,11 +231,11 @@ class GetId3_Module_Audio_Wavpack extends GetId3_Handler_BaseHandler
 
 					switch ($metablock['function_id']) {
 						case 0x21: // ID_RIFF_HEADER
-							$original_wav_filesize = GetId3_Lib_Helper::LittleEndian2Int(substr($metablock['data'], 4, 4));
+							$original_wav_filesize = Helper::LittleEndian2Int(substr($metablock['data'], 4, 4));
 
-							$getid3_temp = new GetId3_GetId3();
+							$getid3_temp = new GetId3Core();
 							$getid3_temp->openfile($this->getid3->filename);
-							$getid3_riff = new GetId3_Module_AudioVideo_Riff($getid3_temp);
+							$getid3_riff = new GetId3\Module\AudioVideo\Riff($getid3_temp);
 							$getid3_riff->ParseRIFFdata($metablock['data']);
 							$metablock['riff']            = $getid3_temp->info['riff'];
 							$info['audio']['sample_rate'] = $getid3_temp->info['riff']['raw']['fmt ']['nSamplesPerSec'];
@@ -247,11 +254,11 @@ class GetId3_Module_Audio_Wavpack extends GetId3_Handler_BaseHandler
 							$metablockRIFFfooter = $metablockRIFFheader.$metablock['data'];
 
 							$startoffset = $metablock['offset'] + ($metablock['large_block'] ? 4 : 2);
-							$getid3_temp = new GetId3_GetId3();
+							$getid3_temp = new GetId3Core();
 							$getid3_temp->openfile($this->getid3->filename);
 							$getid3_temp->info['avdataend']  = $info['avdataend'];
 							$getid3_temp->info['fileformat'] = 'riff';
-							$getid3_riff = new GetId3_Module_AudioVideo_Riff($getid3_temp);
+							$getid3_riff = new GetId3\Module\AudioVideo\Riff($getid3_temp);
 							$metablock['riff'] = $getid3_riff->ParseRIFF($startoffset, $startoffset + $metablock['size']);
 
 							if (!empty($metablock['riff']['INFO'])) {
@@ -263,17 +270,17 @@ class GetId3_Module_Audio_Wavpack extends GetId3_Handler_BaseHandler
 
 
 						case 0x23: // ID_REPLAY_GAIN
-							$info['warning'][] = 'WavPack "Replay Gain" contents not yet handled by GetId3() in metablock at offset '.$metablock['offset'];
+							$info['warning'][] = 'WavPack "Replay Gain" contents not yet handled by GetId3Core() in metablock at offset '.$metablock['offset'];
 							break;
 
 
 						case 0x24: // ID_CUESHEET
-							$info['warning'][] = 'WavPack "Cuesheet" contents not yet handled by GetId3() in metablock at offset '.$metablock['offset'];
+							$info['warning'][] = 'WavPack "Cuesheet" contents not yet handled by GetId3Core() in metablock at offset '.$metablock['offset'];
 							break;
 
 
 						case 0x25: // ID_CONFIG_BLOCK
-							$metablock['flags_raw'] = GetId3_Lib_Helper::LittleEndian2Int(substr($metablock['data'], 0, 3));
+							$metablock['flags_raw'] = Helper::LittleEndian2Int(substr($metablock['data'], 0, 3));
 
 							$metablock['flags']['adobe_mode']     = (bool) ($metablock['flags_raw'] & 0x000001); // "adobe" mode for 32-bit floats
 							$metablock['flags']['fast_flag']      = (bool) ($metablock['flags_raw'] & 0x000002); // fast mode
@@ -324,7 +331,7 @@ class GetId3_Module_Audio_Wavpack extends GetId3_Handler_BaseHandler
 
 						case 0x26: // ID_MD5_CHECKSUM
 							if (strlen($metablock['data']) == 16) {
-								$info['md5_data_source'] = strtolower(GetId3_Lib_Helper::PrintHexBytes($metablock['data'], true, false, false));
+								$info['md5_data_source'] = strtolower(Helper::PrintHexBytes($metablock['data'], true, false, false));
 							} else {
 								$info['warning'][] = 'Expecting 16 bytes of WavPack "MD5 Checksum" in metablock at offset '.$metablock['offset'].', but found '.strlen($metablock['data']).' bytes';
 							}

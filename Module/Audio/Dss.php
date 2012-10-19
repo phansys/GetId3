@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Dss extends GetId3_Handler_BaseHandler
+class Dss extends BaseHandler
 {
     /**
      *
@@ -33,7 +39,7 @@ class GetId3_Module_Audio_Dss extends GetId3_Handler_BaseHandler
 		$DSSheader  = fread($this->getid3->fp, 1256);
 
 		if (!preg_match('#^(\x02|\x03)dss#', $DSSheader)) {
-			$info['error'][] = 'Expecting "[02-03] 64 73 73" at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes(substr($DSSheader, 0, 4)).'"';
+			$info['error'][] = 'Expecting "[02-03] 64 73 73" at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes(substr($DSSheader, 0, 4)).'"';
 			return false;
 		}
 

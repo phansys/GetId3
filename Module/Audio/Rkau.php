@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Rkau extends GetId3_Handler_BaseHandler
+class Rkau extends BaseHandler
 {
 
     /**
@@ -34,7 +40,7 @@ class GetId3_Module_Audio_Rkau extends GetId3_Handler_BaseHandler
 		$RKAUHeader = fread($this->getid3->fp, 20);
 		$magic = 'RKA';
 		if (substr($RKAUHeader, 0, 3) != $magic) {
-			$info['error'][] = 'Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes(substr($RKAUHeader, 0, 3)).'"';
+			$info['error'][] = 'Expecting "'.Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes(substr($RKAUHeader, 0, 3)).'"';
 			return false;
 		}
 
@@ -42,30 +48,30 @@ class GetId3_Module_Audio_Rkau extends GetId3_Handler_BaseHandler
 		$info['audio']['dataformat']   = 'rkau';
 		$info['audio']['bitrate_mode'] = 'vbr';
 
-		$info['rkau']['raw']['version']   = GetId3_Lib_Helper::LittleEndian2Int(substr($RKAUHeader, 3, 1));
+		$info['rkau']['raw']['version']   = Helper::LittleEndian2Int(substr($RKAUHeader, 3, 1));
 		$info['rkau']['version']          = '1.'.str_pad($info['rkau']['raw']['version'] & 0x0F, 2, '0', STR_PAD_LEFT);
 		if (($info['rkau']['version'] > 1.07) || ($info['rkau']['version'] < 1.06)) {
-			$info['error'][] = 'This version of GetId3() ['.$this->getid3->version().'] can only parse RKAU files v1.06 and 1.07 (this file is v'.$info['rkau']['version'].')';
+			$info['error'][] = 'This version of GetId3Core() ['.$this->getid3->version().'] can only parse RKAU files v1.06 and 1.07 (this file is v'.$info['rkau']['version'].')';
 			unset($info['rkau']);
 			return false;
 		}
 
-		$info['rkau']['source_bytes']     = GetId3_Lib_Helper::LittleEndian2Int(substr($RKAUHeader,  4, 4));
-		$info['rkau']['sample_rate']      = GetId3_Lib_Helper::LittleEndian2Int(substr($RKAUHeader,  8, 4));
-		$info['rkau']['channels']         = GetId3_Lib_Helper::LittleEndian2Int(substr($RKAUHeader, 12, 1));
-		$info['rkau']['bits_per_sample']  = GetId3_Lib_Helper::LittleEndian2Int(substr($RKAUHeader, 13, 1));
+		$info['rkau']['source_bytes']     = Helper::LittleEndian2Int(substr($RKAUHeader,  4, 4));
+		$info['rkau']['sample_rate']      = Helper::LittleEndian2Int(substr($RKAUHeader,  8, 4));
+		$info['rkau']['channels']         = Helper::LittleEndian2Int(substr($RKAUHeader, 12, 1));
+		$info['rkau']['bits_per_sample']  = Helper::LittleEndian2Int(substr($RKAUHeader, 13, 1));
 
-		$info['rkau']['raw']['quality']   = GetId3_Lib_Helper::LittleEndian2Int(substr($RKAUHeader, 14, 1));
+		$info['rkau']['raw']['quality']   = Helper::LittleEndian2Int(substr($RKAUHeader, 14, 1));
 		$this->RKAUqualityLookup($info['rkau']);
 
-		$info['rkau']['raw']['flags']            = GetId3_Lib_Helper::LittleEndian2Int(substr($RKAUHeader, 15, 1));
+		$info['rkau']['raw']['flags']            = Helper::LittleEndian2Int(substr($RKAUHeader, 15, 1));
 		$info['rkau']['flags']['joint_stereo']   = (bool) (!($info['rkau']['raw']['flags'] & 0x01));
 		$info['rkau']['flags']['streaming']      =  (bool)  ($info['rkau']['raw']['flags'] & 0x02);
 		$info['rkau']['flags']['vrq_lossy_mode'] =  (bool)  ($info['rkau']['raw']['flags'] & 0x04);
 
 		if ($info['rkau']['flags']['streaming']) {
 			$info['avdataoffset'] += 20;
-			$info['rkau']['compressed_bytes']  = GetId3_Lib_Helper::LittleEndian2Int(substr($RKAUHeader, 16, 4));
+			$info['rkau']['compressed_bytes']  = Helper::LittleEndian2Int(substr($RKAUHeader, 16, 4));
 		} else {
 			$info['avdataoffset'] += 16;
 			$info['rkau']['compressed_bytes'] = $info['avdataend'] - $info['avdataoffset'] - 1;

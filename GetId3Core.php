@@ -1,5 +1,10 @@
 <?php
 
+namespace GetId3;
+
+use GetId3\Lib\Helper;
+use GetId3\Exception\DefaultException;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -17,7 +22,7 @@
  * @link http://www.getid3.org
  * @version 1.9.4-20120530
  */
-class GetId3_GetId3
+class GetId3Core
 {
     // public: Settings
     public $encoding = 'UTF-8';        // CASE SENSITIVE! - i.e. (must be supported by iconv()). Examples:  ISO-8859-1  UTF-8  UTF-16  UTF-16BE
@@ -65,17 +70,6 @@ class GetId3_GetId3
      */
     public function __construct()
     {
-        // Magic autoload function
-        function __autoload($className)
-        {
-            $realpath = realpath(dirname(__FILE__));
-            $realpath = explode(DIRECTORY_SEPARATOR, $realpath);
-            array_pop($realpath);
-            $realpath = implode(DIRECTORY_SEPARATOR, $realpath);
-            $className = $realpath . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, explode('_', $className)) . '.php';
-            include_once $className;
-        }
-
         $this->tempdir = self::getTempDir();
         // Check for PHP version
         $required_php_version = '5.0.5';
@@ -113,20 +107,20 @@ class GetId3_GetId3
         // Check for magic_quotes_runtime
         if (function_exists('get_magic_quotes_runtime')) {
             if (get_magic_quotes_runtime()) {
-                return $this->startup_error('magic_quotes_runtime must be disabled before running GetId3(). Surround GetId3 block by set_magic_quotes_runtime(0) and set_magic_quotes_runtime(1).');
+                return $this->startup_error('magic_quotes_runtime must be disabled before running GetId3Core(). Surround GetId3 block by set_magic_quotes_runtime(0) and set_magic_quotes_runtime(1).');
             }
         }
 
         // Check for magic_quotes_gpc
         if (function_exists('magic_quotes_gpc')) {
             if (get_magic_quotes_gpc()) {
-                return $this->startup_error('magic_quotes_gpc must be disabled before running GetId3(). Surround GetId3 block by set_magic_quotes_gpc(0) and set_magic_quotes_gpc(1).');
+                return $this->startup_error('magic_quotes_gpc must be disabled before running GetId3Core(). Surround GetId3 block by set_magic_quotes_gpc(0) and set_magic_quotes_gpc(1).');
             }
         }
 
         // Check support library
-        if (!class_exists('GetId3_Lib_Helper')) {
-            $this->startup_error .= str_replace('_', DIRECTORY_SEPARATOR, 'GetId3_Lib_Helper') . '.php is missing or corrupt';
+        if (!class_exists('GetId3\\Lib\\Helper')) {
+            $this->startup_error .= str_replace('\\', DIRECTORY_SEPARATOR, 'GetId3\\Lib\\Helper') . '.php is missing or corrupt';
         }
 
         if ($this->option_max_2gb_check === null) {
@@ -234,13 +228,13 @@ class GetId3_GetId3
      *
      * @param type $filename
      * @return boolean
-     * @throws GetId3_Exception_DefaultException
+     * @throws DefaultException
      */
     public function openfile($filename)
     {
         try {
             if (!empty($this->startup_error)) {
-                throw new GetId3_Exception_DefaultException($this->startup_error);
+                throw new \GetId3\Exception\DefaultException($this->startup_error);
             }
             if (!empty($this->startup_warning)) {
                 $this->warning($this->startup_warning);
@@ -254,7 +248,7 @@ class GetId3_GetId3
 
             // remote files not supported
             if (preg_match('/^(ht|f)tp:\/\//', $filename)) {
-                throw new GetId3_Exception_DefaultException('Remote files are not supported - please copy the file locally first');
+                throw new DefaultException('Remote files are not supported - please copy the file locally first');
             }
 
             $filename = str_replace('/', DIRECTORY_SEPARATOR, $filename);
@@ -267,7 +261,7 @@ class GetId3_GetId3
                                                                                    'rb'))) {
                 // great
             } else {
-                throw new GetId3_Exception_DefaultException('Could not open "' . $filename . '" (does not exist, or is not a file)');
+                throw new DefaultException('Could not open "' . $filename . '" (does not exist, or is not a file)');
             }
 
             $this->info['filesize'] = filesize($filename);
@@ -311,11 +305,11 @@ class GetId3_GetId3
                     if ($real_filesize === false) {
                         unset($this->info['filesize']);
                         fclose($this->fp);
-                        throw new GetId3_Exception_DefaultException('Unable to determine actual filesize. File is most likely larger than ' . round(PHP_INT_MAX / 1073741824) . 'GB and is not supported by PHP.');
-                    } elseif (GetId3_Lib_Helper::intValueSupported($real_filesize)) {
+                        throw new DefaultException('Unable to determine actual filesize. File is most likely larger than ' . round(PHP_INT_MAX / 1073741824) . 'GB and is not supported by PHP.');
+                    } elseif (Helper::intValueSupported($real_filesize)) {
                         unset($this->info['filesize']);
                         fclose($this->fp);
-                        throw new GetId3_Exception_DefaultException('PHP seems to think the file is larger than ' . round(PHP_INT_MAX / 1073741824) . 'GB, but filesystem reports it as ' . number_format($real_filesize,
+                        throw new DefaultException('PHP seems to think the file is larger than ' . round(PHP_INT_MAX / 1073741824) . 'GB, but filesystem reports it as ' . number_format($real_filesize,
                                                                                                                                                                                         3) . 'GB, please report to info@getid3.org');
                     }
                     $this->info['filesize'] = $real_filesize;
@@ -361,10 +355,10 @@ class GetId3_GetId3
                 $option_tag = 'option_tag_' . $tag_name;
                 if ($this->$option_tag) {
                     try {
-                        $tag_class = 'GetId3_Module_Tag_' . ucfirst($tag_name);
+                        $tag_class = 'GetId3\\Module\\Tag\\' . ucfirst($tag_name);
                         $tag = new $tag_class($this);
                         $tag->Analyze();
-                    } catch (GetId3_Exception_DefaultException $e) {
+                    } catch (DefaultException $e) {
                         throw $e;
                     }
                 }
@@ -388,7 +382,7 @@ class GetId3_GetId3
                     $this->info['id3v2']['header'] = true;
                     $this->info['id3v2']['majorversion'] = ord($header{3});
                     $this->info['id3v2']['minorversion'] = ord($header{4});
-                    $this->info['avdataoffset'] += GetId3_Lib_Helper::BigEndian2Int(substr($header,
+                    $this->info['avdataoffset'] += Helper::BigEndian2Int(substr($header,
                                                                                    6,
                                                                                    4),
                                                                                    1) + 10; // length of ID3v2 tag in 10-byte header doesn't include 10-byte header length
@@ -454,7 +448,7 @@ class GetId3_GetId3
             }
 
             // instantiate module class
-            $class_name = 'GetId3_Module_' . GetId3_Lib_Helper::toCamelCase($determined_format['group'], '-', true) . '_' . ucfirst($determined_format['module']);
+            $class_name = 'GetId3\\Module\\' . Helper::toCamelCase($determined_format['group'], '-', true) . '\\' . ucfirst($determined_format['module']);
             if (!class_exists($class_name)) {
                 return $this->error('Format not supported, module "' . $determined_format['include'] . '" is corrupt.');
             }
@@ -1080,8 +1074,8 @@ class GetId3_GetId3
             if (!empty($info['pattern'])
                 && preg_match('#' . $info['pattern'] . '#s', $filedata)
             ) {
-                $info['class'] = 'GetId3_Module_' . GetId3_Lib_Helper::toCamelCase($info['group'], '-', true) . '_' . ucfirst($info['module']);
-                $info['include'] = str_replace('_', DIRECTORY_SEPARATOR, $info['class']) . '.php';
+                $info['class'] = 'GetId3\\Module\\' . Helper::toCamelCase($info['group'], '-', true) . '\\' . ucfirst($info['module']);
+                $info['include'] = str_replace('\\', DIRECTORY_SEPARATOR, $info['class']) . '.php';
                 return $info;
             }
         }
@@ -1090,8 +1084,8 @@ class GetId3_GetId3
             // Too many mp3 encoders on the market put gabage in front of mpeg files
             // use assume format on these if format detection failed
             $info = $GetFileFormatArray['mp3'];
-            $info['class'] = 'GetId3_Module_' . GetId3_Lib_Helper::toCamelCase($info['group'], '-', true) . '_' . ucfirst($info['module']);
-            $info['include'] = str_replace('_', DIRECTORY_SEPARATOR, $info['class']) . '.php';
+            $info['class'] = 'GetId3\\Module\\' . Helper::toCamelCase($info['group'], '-', true) . '\\' . ucfirst($info['module']);
+            $info['include'] = str_replace('\\', DIRECTORY_SEPARATOR, $info['class']) . '.php';
             return $info;
         } elseif (preg_match('/\.cue$/i', $filename) && preg_match('#FILE "[^"]+" (BINARY|MOTOROLA|AIFF|WAVE|MP3)#',
                                                                    $filedata)) {
@@ -1099,8 +1093,8 @@ class GetId3_GetId3
             // so until I think of something better, just go by filename if all other format checks fail
             // and verify there's at least one instance of "TRACK xx AUDIO" in the file
             $info = $GetFileFormatArray['cue'];
-            $info['class'] = 'GetId3_Module_' . GetId3_Lib_Helper::toCamelCase($info['group'], '-', true) . '_' . ucfirst($info['module']);
-            $info['include'] = str_replace('_', DIRECTORY_SEPARATOR, $info['class']) . '.php';
+            $info['class'] = 'GetId3\\Module\\' . Helper::toCamelCase($info['group'], '-', true) . '\\' . ucfirst($info['module']);
+            $info['include'] = str_replace('\\', DIRECTORY_SEPARATOR, $info['class']) . '.php';
             return $info;
         }
 
@@ -1131,7 +1125,7 @@ class GetId3_GetId3
 
             // convert string
             elseif (is_string($value)) {
-                $array[$key] = trim(GetId3_Lib_Helper::iconv_fallback($encoding,
+                $array[$key] = trim(Helper::iconv_fallback($encoding,
                                                               $this->encoding,
                                                               $value));
             }
@@ -1163,7 +1157,7 @@ class GetId3_GetId3
                     'riff' => array('riff', 'ISO-8859-1'),
                     'lyrics3' => array('lyrics3', 'ISO-8859-1'),
                     'id3v1' => array('id3v1', $this->encoding_id3v1),
-                    'id3v2' => array('id3v2', 'UTF-8'), // not according to the specs (every frame can have a different encoding), but GetId3() force-converts all encodings to UTF-8
+                    'id3v2' => array('id3v2', 'UTF-8'), // not according to the specs (every frame can have a different encoding), but GetId3Core() force-converts all encodings to UTF-8
                     'ape' => array('ape', 'UTF-8'),
                     'cue' => array('cue', 'ISO-8859-1'),
                     'matroska' => array('matroska', 'UTF-8'),
@@ -1208,7 +1202,7 @@ class GetId3_GetId3
                                 //$this->info['tags_html'][$tag_name][$tag_key][$key] = GetId3_lib::MultiByteCharString2HTML($value, $encoding);
                                 $this->info['tags_html'][$tag_name][$tag_key][$key] = str_replace('&#0;',
                                                                                                   '',
-                                                                                                  trim(GetId3_Lib_Helper::MultiByteCharString2HTML($value,
+                                                                                                  trim(Helper::MultiByteCharString2HTML($value,
                                                                                                                                            $encoding)));
                             } else {
                                 $this->info['tags_html'][$tag_name][$tag_key][$key] = $value;
@@ -1289,7 +1283,7 @@ class GetId3_GetId3
 
             // We cannot get an identical md5_data value for Ogg files where the comments
             // span more than 1 Ogg page (compared to the same audio data with smaller
-            // comments) using the normal GetId3() method of MD5'ing the data between the
+            // comments) using the normal GetId3Core() method of MD5'ing the data between the
             // end of the comments and the end of the file (minus any trailing tags),
             // because the page sequence numbers of the pages that the audio data is on
             // do not match. Under normal circumstances, where comments are smaller than
@@ -1299,7 +1293,7 @@ class GetId3_GetId3
             // This procedure must be applied to ALL Ogg files, not just the ones with
             // comments larger than 1 page, because the below method simply MD5's the
             // whole file with the comments stripped, not just the portion after the
-            // comments block (which is the standard GetId3() method.
+            // comments block (which is the standard GetId3Core() method.
             // The above-mentioned problem of comments spanning multiple pages and changing
             // page sequence numbers likely happens for OggSpeex and OggFLAC as well, but
             // currently vorbiscomment only works on OggVorbis files.
@@ -1340,7 +1334,7 @@ class GetId3_GetId3
 
                 if (!empty($VorbisCommentError)) {
 
-                    $this->info['warning'][] = 'Failed making system call to vorbiscomment(.exe) - ' . $algorithm . '_data will be incorrect. If vorbiscomment is unavailable, please download from http://www.vorbis.com/download.psp and put in the GetId3() directory. Error returned: ' . $VorbisCommentError;
+                    $this->info['warning'][] = 'Failed making system call to vorbiscomment(.exe) - ' . $algorithm . '_data will be incorrect. If vorbiscomment is unavailable, please download from http://www.vorbis.com/download.psp and put in the GetId3Core() directory. Error returned: ' . $VorbisCommentError;
                     $this->info[$algorithm . '_data'] = false;
                 } else {
 
@@ -1368,7 +1362,7 @@ class GetId3_GetId3
             if (!empty($this->info['avdataoffset']) || (isset($this->info['avdataend']) && ($this->info['avdataend'] < $this->info['filesize']))) {
 
                 // get hash from part of file
-                $this->info[$algorithm . '_data'] = GetId3_Lib_Helper::hash_data($this->info['filenamepath'],
+                $this->info[$algorithm . '_data'] = Helper::hash_data($this->info['filenamepath'],
                                                                          $this->info['avdataoffset'],
                                                                          $this->info['avdataend'],
                                                                          $algorithm);
@@ -1452,7 +1446,7 @@ class GetId3_GetId3
 
         // Set playtime string
         if (!empty($this->info['playtime_seconds']) && empty($this->info['playtime_string'])) {
-            $this->info['playtime_string'] = GetId3_Lib_Helper::PlaytimeString($this->info['playtime_seconds']);
+            $this->info['playtime_string'] = Helper::PlaytimeString($this->info['playtime_seconds']);
         }
     }
 
@@ -1547,10 +1541,10 @@ class GetId3_GetId3
             }
 
             if (isset($this->info['replay_gain']['track']['peak'])) {
-                $this->info['replay_gain']['track']['max_noclip_gain'] = 0 - GetId3_Lib_Helper::RGADamplitude2dB($this->info['replay_gain']['track']['peak']);
+                $this->info['replay_gain']['track']['max_noclip_gain'] = 0 - Helper::RGADamplitude2dB($this->info['replay_gain']['track']['peak']);
             }
             if (isset($this->info['replay_gain']['album']['peak'])) {
-                $this->info['replay_gain']['album']['max_noclip_gain'] = 0 - GetId3_Lib_Helper::RGADamplitude2dB($this->info['replay_gain']['album']['peak']);
+                $this->info['replay_gain']['album']['max_noclip_gain'] = 0 - Helper::RGADamplitude2dB($this->info['replay_gain']['album']['peak']);
             }
         }
         return true;
@@ -1586,7 +1580,7 @@ class GetId3_GetId3
     /**
      *
      */
-    protected static function getTempDir()
+    public static function getTempDir()
     {
         if (null === self::$TempDir) {
             $temp_dir = ini_get('upload_tmp_dir');
@@ -1640,7 +1634,7 @@ class GetId3_GetId3
      *
      * @return type
      */
-    protected static function environmentIsWindows()
+    public static function environmentIsWindows()
     {
         // define a static property rather than looking up every time it is needed
         if (null === self::$EnvironmentIsWindows) {
@@ -1654,7 +1648,7 @@ class GetId3_GetId3
      */
     public static function getIncludePath()
     {
-        // Get base path of GetId3() - ONCE
+        // Get base path of GetId3Core() - ONCE
         if (null === self::$IncludePath) {
             foreach (get_included_files() as $val) {
                 if (basename($val) == 'getid3.php') {

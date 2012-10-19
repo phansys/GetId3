@@ -1,5 +1,10 @@
 <?php
 
+namespace GetId3\Handler;
+
+use GetId3\Lib\Helper;
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -16,12 +21,12 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-abstract class GetId3_Handler_BaseHandler
+abstract class BaseHandler
 {
     /**
      * pointer
      *
-     * @var GetId3_GetId3
+     * @var GetId3\GetId3
      */
     protected $getid3;
 
@@ -52,15 +57,15 @@ abstract class GetId3_Handler_BaseHandler
      * @var integer
      */
     protected $data_string_length = 0;
-    
+
     private $dependency_to;
 
     /**
      *
-     * @param GetId3_GetId3 $getid3
+     * @param GetId3\GetId3 $getid3
      * @param type $call_module
      */
-    public function __construct(GetId3_GetId3 $getid3, $call_module = null)
+    public function __construct(GetId3Core $getid3, $call_module = null)
     {
         $this->getid3 = $getid3;
 
@@ -214,7 +219,7 @@ abstract class GetId3_Handler_BaseHandler
                                    $length)
     {
         try {
-            if (!GetId3_Lib_Helper::intValueSupported($offset + $length)) {
+            if (!Helper::intValueSupported($offset + $length)) {
                 throw new Exception('it extends beyond the ' . round(PHP_INT_MAX / 1073741824) . 'GB limit');
             }
 

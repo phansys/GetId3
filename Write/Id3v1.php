@@ -1,4 +1,11 @@
 <?php
+
+namespace GetId3\Write;
+
+use GetId3\Lib\Helper;
+use GetId3\GetId3Core;
+use GetId3\Module\Tag;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -19,9 +26,9 @@
  * @author James Heinrich <info@getid3.org>
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
- * @uses GetId3_Module_Tag_Id3v1
+ * @uses GetId3\Module\Tag\Id3v1
  */
-class GetId3_Write_Id3v1
+class Id3v1
 {
 	public $filename;
 	public $filesize;
@@ -53,7 +60,7 @@ class GetId3_Write_Id3v1
 		// File MUST be writeable - CHMOD(646) at least
 		if (!empty($this->filename) && is_readable($this->filename) && is_writable($this->filename) && is_file($this->filename)) {
 			$this->setRealFileSize();
-			if (($this->filesize <= 0) || !GetId3_Lib_Helper::intValueSupported($this->filesize)) {
+			if (($this->filesize <= 0) || !Helper::intValueSupported($this->filesize)) {
 				$this->errors[] = 'Unable to WriteID3v1('.$this->filename.') because filesize ('.$this->filesize.') is larger than '.round(PHP_INT_MAX / 1073741824).'GB';
 				return false;
 			}
@@ -66,7 +73,7 @@ class GetId3_Write_Id3v1
 				}
 				$this->tag_data['track'] = (isset($this->tag_data['track']) ? $this->tag_data['track'] : (isset($this->tag_data['track_number']) ? $this->tag_data['track_number'] : (isset($this->tag_data['tracknumber']) ? $this->tag_data['tracknumber'] : '')));
 
-				$new_id3v1_tag_data = GetId3_Module_Tag_Id3v1::GenerateID3v1Tag(
+				$new_id3v1_tag_data = Tag\Id3v1::GenerateID3v1Tag(
 														(isset($this->tag_data['title']  ) ? $this->tag_data['title']   : ''),
 														(isset($this->tag_data['artist'] ) ? $this->tag_data['artist']  : ''),
 														(isset($this->tag_data['album']  ) ? $this->tag_data['album']   : ''),
@@ -96,7 +103,7 @@ class GetId3_Write_Id3v1
 		// This function rewrites the ID3v1 tag with correct padding
 
 		// Initialize GetId3 engine
-		$getID3 = new GetId3_GetId3();
+		$getID3 = new GetId3Core();
 		$getID3->option_tag_id3v2  = false;
 		$getID3->option_tag_apetag = false;
 		$getID3->option_tags_html  = false;
@@ -117,7 +124,7 @@ class GetId3_Write_Id3v1
 		// File MUST be writeable - CHMOD(646) at least
 		if (!empty($this->filename) && is_readable($this->filename) && is_writable($this->filename) && is_file($this->filename)) {
 			$this->setRealFileSize();
-			if (($this->filesize <= 0) || !GetId3_Lib_Helper::intValueSupported($this->filesize)) {
+			if (($this->filesize <= 0) || !Helper::intValueSupported($this->filesize)) {
 				$this->errors[] = 'Unable to RemoveID3v1('.$this->filename.') because filesize ('.$this->filesize.') is larger than '.round(PHP_INT_MAX / 1073741824).'GB';
 				return false;
 			}
@@ -152,7 +159,7 @@ class GetId3_Write_Id3v1
 		}
 		// 32-bit PHP will not return correct values for filesize() if file is >=2GB
 		// but GetId3->analyze() has workarounds to get actual filesize
-		$getID3 = new GetId3_GetId3();
+		$getID3 = new GetId3Core();
 		$getID3->option_tag_id3v1  = false;
 		$getID3->option_tag_id3v2  = false;
 		$getID3->option_tag_apetag = false;

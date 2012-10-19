@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Tag;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Tag_Apetag extends GetId3_Handler_BaseHandler
+class Apetag extends BaseHandler
 {
     /**
      * @var mixed
@@ -39,7 +45,7 @@ class GetId3_Module_Tag_Apetag extends GetId3_Handler_BaseHandler
 	public function Analyze() {
 		$info = &$this->getid3->info;
 
-		if (!GetId3_Lib_Helper::intValueSupported($info['filesize'])) {
+		if (!Helper::intValueSupported($info['filesize'])) {
 			$info['warning'][] = 'Unable to check for APEtags because file is larger than '.round(PHP_INT_MAX / 1073741824).'GB';
 			return false;
 		}
@@ -131,9 +137,9 @@ class GetId3_Module_Tag_Apetag extends GetId3_Handler_BaseHandler
 		$thisfile_replaygain = &$info['replay_gain'];
 
 		for ($i = 0; $i < $thisfile_ape['footer']['raw']['tag_items']; $i++) {
-			$value_size = GetId3_Lib_Helper::LittleEndian2Int(substr($APEtagData, $offset, 4));
+			$value_size = Helper::LittleEndian2Int(substr($APEtagData, $offset, 4));
 			$offset += 4;
-			$item_flags = GetId3_Lib_Helper::LittleEndian2Int(substr($APEtagData, $offset, 4));
+			$item_flags = Helper::LittleEndian2Int(substr($APEtagData, $offset, 4));
 			$offset += 4;
 			if (strstr(substr($APEtagData, $offset), "\x00") === false) {
 				$info['error'][] = 'Cannot find null-byte (0x00) seperator between ItemKey #'.$i.' and value. ItemKey starts '.$offset.' bytes into the APE tag, at file offset '.($thisfile_ape['tag_offset_start'] + $offset);
@@ -245,7 +251,7 @@ class GetId3_Module_Tag_Apetag extends GetId3_Handler_BaseHandler
 
 					$thisfile_ape_items_current['image_mime'] = '';
 					$imageinfo = array();
-					$imagechunkcheck = GetId3_Lib_Helper::GetDataImageSize($thisfile_ape_items_current['data'], $imageinfo);
+					$imagechunkcheck = Helper::GetDataImageSize($thisfile_ape_items_current['data'], $imageinfo);
 					$thisfile_ape_items_current['image_mime'] = image_type_to_mime_type($imagechunkcheck[2]);
 
 					do {
@@ -323,10 +329,10 @@ class GetId3_Module_Tag_Apetag extends GetId3_Handler_BaseHandler
 		if ($headerfooterinfo_raw['footer_tag'] != 'APETAGEX') {
 			return false;
 		}
-		$headerfooterinfo_raw['version']      = GetId3_Lib_Helper::LittleEndian2Int(substr($APEheaderFooterData,  8, 4));
-		$headerfooterinfo_raw['tagsize']      = GetId3_Lib_Helper::LittleEndian2Int(substr($APEheaderFooterData, 12, 4));
-		$headerfooterinfo_raw['tag_items']    = GetId3_Lib_Helper::LittleEndian2Int(substr($APEheaderFooterData, 16, 4));
-		$headerfooterinfo_raw['global_flags'] = GetId3_Lib_Helper::LittleEndian2Int(substr($APEheaderFooterData, 20, 4));
+		$headerfooterinfo_raw['version']      = Helper::LittleEndian2Int(substr($APEheaderFooterData,  8, 4));
+		$headerfooterinfo_raw['tagsize']      = Helper::LittleEndian2Int(substr($APEheaderFooterData, 12, 4));
+		$headerfooterinfo_raw['tag_items']    = Helper::LittleEndian2Int(substr($APEheaderFooterData, 16, 4));
+		$headerfooterinfo_raw['global_flags'] = Helper::LittleEndian2Int(substr($APEheaderFooterData, 20, 4));
 		$headerfooterinfo_raw['reserved']     =                              substr($APEheaderFooterData, 24, 8);
 
 		$headerfooterinfo['tag_version']         = $headerfooterinfo_raw['version'] / 1000;

@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Write;
+
+use GetId3\Lib\Helper;
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,8 +26,12 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Write_Real
+class Real
 {
+    /**
+     *
+     * @var string
+     */
 	public $filename;
     /**
      *
@@ -66,7 +76,7 @@ class GetId3_Write_Real
 		if (is_writeable($this->filename) && is_file($this->filename) && ($fp_source = fopen($this->filename, 'r+b'))) {
 
 			// Initialize GetId3 engine
-			$getID3 = new GetId3_GetId3;
+			$getID3 = new GetId3Core();
 			$OldThisFileInfo = $getID3->analyze($this->filename);
 			if (empty($OldThisFileInfo['real']['chunks']) && !empty($OldThisFileInfo['real']['old_ra_header'])) {
 				$this->errors[] = 'Cannot write Real tags on old-style file format';
@@ -127,7 +137,7 @@ class GetId3_Write_Real
 					$BeforeOffset = $oldChunkInfo['CONT']['offset'];
 					$AfterOffset  = $oldChunkInfo['CONT']['offset'] + $oldChunkInfo['CONT']['length'];
 				}
-				if ($tempfilename = tempnam(GetId3_GetId3::getTempDir(), 'getID3')) {
+				if ($tempfilename = tempnam(GetId3Core::getTempDir(), 'getID3')) {
 					if (is_writable($tempfilename) && is_file($tempfilename) && ($fp_temp = fopen($tempfilename, 'wb'))) {
 
 						rewind($fp_source);
@@ -177,10 +187,10 @@ class GetId3_Write_Real
 		$newHeadersCount = $chunks[$chunkNameKeys['.RMF']]['headers_count'] + ($oldCONTexists ? 0 : 1);
 
 		$RMFchunk  = "\x00\x00"; // object version
-		$RMFchunk .= GetId3_Lib_Helper::BigEndian2String($chunks[$chunkNameKeys['.RMF']]['file_version'], 4);
-		$RMFchunk .= GetId3_Lib_Helper::BigEndian2String($newHeadersCount,                                4);
+		$RMFchunk .= Helper::BigEndian2String($chunks[$chunkNameKeys['.RMF']]['file_version'], 4);
+		$RMFchunk .= Helper::BigEndian2String($newHeadersCount,                                4);
 
-		$RMFchunk  = '.RMF'.GetId3_Lib_Helper::BigEndian2String(strlen($RMFchunk) + 8, 4).$RMFchunk; // .RMF chunk identifier + chunk length
+		$RMFchunk  = '.RMF'.Helper::BigEndian2String(strlen($RMFchunk) + 8, 4).$RMFchunk; // .RMF chunk identifier + chunk length
 		return $RMFchunk;
 	}
 
@@ -211,19 +221,19 @@ class GetId3_Write_Real
 		$CONTdelta = strlen($new_CONT_tag_data) - $old_CONT_length;
 
 		$PROPchunk  = "\x00\x00"; // object version
-		$PROPchunk .= GetId3_Lib_Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['max_bit_rate'],    4);
-		$PROPchunk .= GetId3_Lib_Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['avg_bit_rate'],    4);
-		$PROPchunk .= GetId3_Lib_Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['max_packet_size'], 4);
-		$PROPchunk .= GetId3_Lib_Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['avg_packet_size'], 4);
-		$PROPchunk .= GetId3_Lib_Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['num_packets'],     4);
-		$PROPchunk .= GetId3_Lib_Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['duration'],        4);
-		$PROPchunk .= GetId3_Lib_Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['preroll'],         4);
-		$PROPchunk .= GetId3_Lib_Helper::BigEndian2String(max(0, $old_INDX_offset + $CONTdelta),              4);
-		$PROPchunk .= GetId3_Lib_Helper::BigEndian2String(max(0, $old_DATA_offset + $CONTdelta),              4);
-		$PROPchunk .= GetId3_Lib_Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['num_streams'],     2);
-		$PROPchunk .= GetId3_Lib_Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['flags_raw'],       2);
+		$PROPchunk .= Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['max_bit_rate'],    4);
+		$PROPchunk .= Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['avg_bit_rate'],    4);
+		$PROPchunk .= Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['max_packet_size'], 4);
+		$PROPchunk .= Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['avg_packet_size'], 4);
+		$PROPchunk .= Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['num_packets'],     4);
+		$PROPchunk .= Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['duration'],        4);
+		$PROPchunk .= Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['preroll'],         4);
+		$PROPchunk .= Helper::BigEndian2String(max(0, $old_INDX_offset + $CONTdelta),              4);
+		$PROPchunk .= Helper::BigEndian2String(max(0, $old_DATA_offset + $CONTdelta),              4);
+		$PROPchunk .= Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['num_streams'],     2);
+		$PROPchunk .= Helper::BigEndian2String($chunks[$chunkNameKeys['PROP']]['flags_raw'],       2);
 
-		$PROPchunk  = 'PROP'.GetId3_Lib_Helper::BigEndian2String(strlen($PROPchunk) + 8, 4).$PROPchunk; // PROP chunk identifier + chunk length
+		$PROPchunk  = 'PROP'.Helper::BigEndian2String(strlen($PROPchunk) + 8, 4).$PROPchunk; // PROP chunk identifier + chunk length
 		return $PROPchunk;
 	}
 
@@ -239,23 +249,23 @@ class GetId3_Write_Real
 
 		$CONTchunk  = "\x00\x00"; // object version
 
-		$CONTchunk .= GetId3_Lib_Helper::BigEndian2String((!empty($this->tag_data['title'])     ? strlen($this->tag_data['title'])     : 0), 2);
+		$CONTchunk .= Helper::BigEndian2String((!empty($this->tag_data['title'])     ? strlen($this->tag_data['title'])     : 0), 2);
 		$CONTchunk .= (!empty($this->tag_data['title'])     ? strlen($this->tag_data['title'])     : '');
 
-		$CONTchunk .= GetId3_Lib_Helper::BigEndian2String((!empty($this->tag_data['artist'])    ? strlen($this->tag_data['artist'])    : 0), 2);
+		$CONTchunk .= Helper::BigEndian2String((!empty($this->tag_data['artist'])    ? strlen($this->tag_data['artist'])    : 0), 2);
 		$CONTchunk .= (!empty($this->tag_data['artist'])    ? strlen($this->tag_data['artist'])    : '');
 
-		$CONTchunk .= GetId3_Lib_Helper::BigEndian2String((!empty($this->tag_data['copyright']) ? strlen($this->tag_data['copyright']) : 0), 2);
+		$CONTchunk .= Helper::BigEndian2String((!empty($this->tag_data['copyright']) ? strlen($this->tag_data['copyright']) : 0), 2);
 		$CONTchunk .= (!empty($this->tag_data['copyright']) ? strlen($this->tag_data['copyright']) : '');
 
-		$CONTchunk .= GetId3_Lib_Helper::BigEndian2String((!empty($this->tag_data['comment'])   ? strlen($this->tag_data['comment'])   : 0), 2);
+		$CONTchunk .= Helper::BigEndian2String((!empty($this->tag_data['comment'])   ? strlen($this->tag_data['comment'])   : 0), 2);
 		$CONTchunk .= (!empty($this->tag_data['comment'])   ? strlen($this->tag_data['comment'])   : '');
 
 		if ($this->paddedlength > (strlen($CONTchunk) + 8)) {
 			$CONTchunk .= str_repeat("\x00", $this->paddedlength - strlen($CONTchunk) - 8);
 		}
 
-		$CONTchunk  = 'CONT'.GetId3_Lib_Helper::BigEndian2String(strlen($CONTchunk) + 8, 4).$CONTchunk; // CONT chunk identifier + chunk length
+		$CONTchunk  = 'CONT'.Helper::BigEndian2String(strlen($CONTchunk) + 8, 4).$CONTchunk; // CONT chunk identifier + chunk length
 
 		return $CONTchunk;
 	}
@@ -269,7 +279,7 @@ class GetId3_Write_Real
 		if (is_writeable($this->filename) && is_file($this->filename) && ($fp_source = fopen($this->filename, 'r+b'))) {
 
 			// Initialize GetId3 engine
-			$getID3 = new GetId3_GetId3;
+			$getID3 = new GetId3Core();
 			$OldThisFileInfo = $getID3->analyze($this->filename);
 			if (empty($OldThisFileInfo['real']['chunks']) && !empty($OldThisFileInfo['real']['old_ra_header'])) {
 				$this->errors[] = 'Cannot remove Real tags from old-style file format';
@@ -294,7 +304,7 @@ class GetId3_Write_Real
 
 			$BeforeOffset = $oldChunkInfo['CONT']['offset'];
 			$AfterOffset  = $oldChunkInfo['CONT']['offset'] + $oldChunkInfo['CONT']['length'];
-			if ($tempfilename = tempnam(GetId3_GetId3::getTempDir(), 'getID3')) {
+			if ($tempfilename = tempnam(GetId3Core::getTempDir(), 'getID3')) {
 				if (is_writable($tempfilename) && is_file($tempfilename) && ($fp_temp = fopen($tempfilename, 'wb'))) {
 
 					rewind($fp_source);

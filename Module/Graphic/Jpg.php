@@ -1,4 +1,11 @@
 <?php
+
+namespace GetId3\Module\Graphic;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,10 +27,10 @@
  * @author James Heinrich <info@getid3.org>
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
- * @uses GetId3_Module_Tag_Xmp (optional)
+ * @uses GetId3\Module\Tag\Xmp (optional)
  * @uses ext-exif (optional)
  */
-class GetId3_Module_Graphic_Jpg extends GetId3_Handler_BaseHandler
+class Jpg extends BaseHandler
 {
 
     /**
@@ -42,7 +49,7 @@ class GetId3_Module_Graphic_Jpg extends GetId3_Handler_BaseHandler
 		fseek($this->getid3->fp, $info['avdataoffset'], SEEK_SET);
 
 		$imageinfo = array();
-		list($width, $height, $type) = GetId3_Lib_Helper::GetDataImageSize(fread($this->getid3->fp, $info['filesize']), $imageinfo);
+		list($width, $height, $type) = Helper::GetDataImageSize(fread($this->getid3->fp, $info['filesize']), $imageinfo);
 
 
 		if (isset($imageinfo['APP13'])) {
@@ -80,7 +87,7 @@ class GetId3_Module_Graphic_Jpg extends GetId3_Handler_BaseHandler
 							$info['warning'][] = 'exif_read_data() cannot parse non-EXIF data in APP1 (expected "Exif", found "'.substr($imageinfo['APP1'], 0, 4).'")';
 						}
 					} else {
-						$info['warning'][] = 'EXIF parsing only available when '.(GetId3_GetId3::environmentIsWindows() ? 'php_exif.dll enabled' : 'compiled with --enable-exif');
+						$info['warning'][] = 'EXIF parsing only available when '.(GetId3Core::environmentIsWindows() ? 'php_exif.dll enabled' : 'compiled with --enable-exif');
 					}
 				}
 				$returnOK = true;
@@ -125,7 +132,7 @@ class GetId3_Module_Graphic_Jpg extends GetId3_Handler_BaseHandler
 				$computed_time = array(0=>0, 1=>0, 2=>0, 3=>0, 4=>0, 5=>0);
 				if (isset($info['jpg']['exif']['GPS']['GPSTimeStamp']) && is_array($info['jpg']['exif']['GPS']['GPSTimeStamp'])) {
 					foreach ($info['jpg']['exif']['GPS']['GPSTimeStamp'] as $key => $value) {
-						$computed_time[$key] = GetId3_Lib_Helper::DecimalizeFraction($value);
+						$computed_time[$key] = Helper::DecimalizeFraction($value);
 					}
 				}
 				$info['jpg']['exif']['GPS']['computed']['timestamp'] = mktime($computed_time[0], $computed_time[1], $computed_time[2], $computed_time[3], $computed_time[4], $computed_time[5]);
@@ -134,7 +141,7 @@ class GetId3_Module_Graphic_Jpg extends GetId3_Handler_BaseHandler
 			if (isset($info['jpg']['exif']['GPS']['GPSLatitude']) && is_array($info['jpg']['exif']['GPS']['GPSLatitude'])) {
 				$direction_multiplier = ((isset($info['jpg']['exif']['GPS']['GPSLatitudeRef']) && ($info['jpg']['exif']['GPS']['GPSLatitudeRef'] == 'S')) ? -1 : 1);
 				foreach ($info['jpg']['exif']['GPS']['GPSLatitude'] as $key => $value) {
-					$computed_latitude[$key] = GetId3_Lib_Helper::DecimalizeFraction($value);
+					$computed_latitude[$key] = Helper::DecimalizeFraction($value);
 				}
 				$info['jpg']['exif']['GPS']['computed']['latitude'] = $direction_multiplier * ($computed_latitude[0] + ($computed_latitude[1] / 60) + ($computed_latitude[2] / 3600));
 			}
@@ -142,21 +149,21 @@ class GetId3_Module_Graphic_Jpg extends GetId3_Handler_BaseHandler
 			if (isset($info['jpg']['exif']['GPS']['GPSLongitude']) && is_array($info['jpg']['exif']['GPS']['GPSLongitude'])) {
 				$direction_multiplier = ((isset($info['jpg']['exif']['GPS']['GPSLongitudeRef']) && ($info['jpg']['exif']['GPS']['GPSLongitudeRef'] == 'W')) ? -1 : 1);
 				foreach ($info['jpg']['exif']['GPS']['GPSLongitude'] as $key => $value) {
-					$computed_longitude[$key] = GetId3_Lib_Helper::DecimalizeFraction($value);
+					$computed_longitude[$key] = Helper::DecimalizeFraction($value);
 				}
 				$info['jpg']['exif']['GPS']['computed']['longitude'] = $direction_multiplier * ($computed_longitude[0] + ($computed_longitude[1] / 60) + ($computed_longitude[2] / 3600));
 			}
 
 			if (isset($info['jpg']['exif']['GPS']['GPSAltitude'])) {
 				$direction_multiplier = ((isset($info['jpg']['exif']['GPS']['GPSAltitudeRef']) && ($info['jpg']['exif']['GPS']['GPSAltitudeRef'] === chr(1))) ? -1 : 1);
-				$info['jpg']['exif']['GPS']['computed']['altitude'] = $direction_multiplier * GetId3_Lib_Helper::DecimalizeFraction($info['jpg']['exif']['GPS']['GPSAltitude']);
+				$info['jpg']['exif']['GPS']['computed']['altitude'] = $direction_multiplier * Helper::DecimalizeFraction($info['jpg']['exif']['GPS']['GPSAltitude']);
 			}
 
 		}
 
-        if (class_exists('GetId3_Module_Tag_Xmp')) {
+        if (class_exists('GetId3\\Module\\Tag\\Xmp')) {
 			if (isset($info['filenamepath'])) {
-				$image_xmp = new GetId3_Module_Tag_Xmp($info['filenamepath']);
+				$image_xmp = new GetId3\Module\Tag\Xmp($info['filenamepath']);
 				$xmp_raw = $image_xmp->getAllTags();
 				foreach ($xmp_raw as $key => $value) {
 					list($subsection, $tagname) = explode(':', $key);
@@ -181,9 +188,9 @@ class GetId3_Module_Graphic_Jpg extends GetId3_Handler_BaseHandler
 		if (is_array($value)) {
 			return $value;
 		} elseif (preg_match('#^[0-9]+/[0-9]+$#', $value)) {
-			return GetId3_Lib_Helper::DecimalizeFraction($value);
+			return Helper::DecimalizeFraction($value);
 		} elseif (preg_match('#^[0-9]+$#', $value)) {
-			return GetId3_Lib_Helper::CastAsInt($value);
+			return Helper::CastAsInt($value);
 		} elseif (preg_match('#^[0-9\.]+$#', $value)) {
 			return (float) $value;
 		}

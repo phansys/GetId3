@@ -1,5 +1,10 @@
 <?php
 
+namespace GetId3\Module\AudioVideo;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -54,13 +59,13 @@
  *
  * @author James Heinrich <info@getid3.org>
  * @author Seth Kaufman <seth@whirl-i-gig.com>
- * @uses GetId3_Module_AudioVideo_AVCSequenceParameterSetReader
- * @uses GetId3_Module_AudioVideo_AMFReader
- * @uses GetId3_Module_AudioVideo_AMFStream
+ * @uses GetId3\Module\AudioVideo\AVCSequenceParameterSetReader
+ * @uses GetId3\Module\AudioVideo\AMFReader
+ * @uses GetId3\Module\AudioVideo\AMFStream
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_AudioVideo_Flv extends GetId3_Handler_BaseHandler
+class Flv extends BaseHandler
 {
     /**
      *
@@ -93,14 +98,14 @@ class GetId3_Module_AudioVideo_Flv extends GetId3_Handler_BaseHandler
 
         $info['fileformat'] = 'flv';
         $info['flv']['header']['signature'] = substr($FLVheader, 0, 3);
-        $info['flv']['header']['version'] = GetId3_Lib_Helper::BigEndian2Int(substr($FLVheader,
+        $info['flv']['header']['version'] = Helper::BigEndian2Int(substr($FLVheader,
                                                                                     3,
                                                                                     1));
-        $TypeFlags = GetId3_Lib_Helper::BigEndian2Int(substr($FLVheader, 4, 1));
+        $TypeFlags = Helper::BigEndian2Int(substr($FLVheader, 4, 1));
 
         $magic = 'FLV';
         if ($info['flv']['header']['signature'] != $magic) {
-            $info['error'][] = 'Expecting "' . GetId3_Lib_Helper::PrintHexBytes($magic) . '" at offset ' . $info['avdataoffset'] . ', found "' . GetId3_Lib_Helper::PrintHexBytes($info['flv']['header']['signature']) . '"';
+            $info['error'][] = 'Expecting "' . Helper::PrintHexBytes($magic) . '" at offset ' . $info['avdataoffset'] . ', found "' . Helper::PrintHexBytes($info['flv']['header']['signature']) . '"';
             unset($info['flv']);
             unset($info['fileformat']);
             return false;
@@ -109,7 +114,7 @@ class GetId3_Module_AudioVideo_Flv extends GetId3_Handler_BaseHandler
         $info['flv']['header']['hasAudio'] = (bool) ($TypeFlags & 0x04);
         $info['flv']['header']['hasVideo'] = (bool) ($TypeFlags & 0x01);
 
-        $FrameSizeDataLength = GetId3_Lib_Helper::BigEndian2Int(fread($this->getid3->fp,
+        $FrameSizeDataLength = Helper::BigEndian2Int(fread($this->getid3->fp,
                                                                       4));
         $FLVheaderFrameLength = 9;
         if ($FrameSizeDataLength > $FLVheaderFrameLength) {
@@ -127,15 +132,15 @@ class GetId3_Module_AudioVideo_Flv extends GetId3_Handler_BaseHandler
         while (((ftell($this->getid3->fp) + 16) < $info['avdataend']) && (($tagParseCount++ <= $this->max_frames) || !$found_valid_meta_playtime)) {
             $ThisTagHeader = fread($this->getid3->fp, 16);
 
-            $PreviousTagLength = GetId3_Lib_Helper::BigEndian2Int(substr($ThisTagHeader,
+            $PreviousTagLength = Helper::BigEndian2Int(substr($ThisTagHeader,
                                                                          0, 4));
-            $TagType = GetId3_Lib_Helper::BigEndian2Int(substr($ThisTagHeader,
+            $TagType = Helper::BigEndian2Int(substr($ThisTagHeader,
                                                                4, 1));
-            $DataLength = GetId3_Lib_Helper::BigEndian2Int(substr($ThisTagHeader,
+            $DataLength = Helper::BigEndian2Int(substr($ThisTagHeader,
                                                                   5, 3));
-            $Timestamp = GetId3_Lib_Helper::BigEndian2Int(substr($ThisTagHeader,
+            $Timestamp = Helper::BigEndian2Int(substr($ThisTagHeader,
                                                                  8, 3));
-            $LastHeaderByte = GetId3_Lib_Helper::BigEndian2Int(substr($ThisTagHeader,
+            $LastHeaderByte = Helper::BigEndian2Int(substr($ThisTagHeader,
                                                                       15, 1));
             $NextOffset = ftell($this->getid3->fp) - 1 + $DataLength;
             if ($Timestamp > $Duration) {
@@ -166,24 +171,24 @@ class GetId3_Module_AudioVideo_Flv extends GetId3_Handler_BaseHandler
                         if ($info['flv']['video']['videoCodec'] == self::GETID3_FLV_VIDEO_H264) {
                             // this code block contributed by: moysevichØgmail*com
 
-                            $AVCPacketType = GetId3_Lib_Helper::BigEndian2Int(substr($FLVvideoHeader,
+                            $AVCPacketType = Helper::BigEndian2Int(substr($FLVvideoHeader,
                                                                                      0,
                                                                                      1));
-                            if ($AVCPacketType == GetId3_Module_AudioVideo_AVCSequenceParameterSetReader::H264_AVC_SEQUENCE_HEADER) {
+                            if ($AVCPacketType == GetId3\Module\AudioVideo\AVCSequenceParameterSetReader::H264_AVC_SEQUENCE_HEADER) {
                                 //	read AVCDecoderConfigurationRecord
-                                $configurationVersion = GetId3_Lib_Helper::BigEndian2Int(substr($FLVvideoHeader,
+                                $configurationVersion = Helper::BigEndian2Int(substr($FLVvideoHeader,
                                                                                                 4,
                                                                                                 1));
-                                $AVCProfileIndication = GetId3_Lib_Helper::BigEndian2Int(substr($FLVvideoHeader,
+                                $AVCProfileIndication = Helper::BigEndian2Int(substr($FLVvideoHeader,
                                                                                                 5,
                                                                                                 1));
-                                $profile_compatibility = GetId3_Lib_Helper::BigEndian2Int(substr($FLVvideoHeader,
+                                $profile_compatibility = Helper::BigEndian2Int(substr($FLVvideoHeader,
                                                                                                  6,
                                                                                                  1));
-                                $lengthSizeMinusOne = GetId3_Lib_Helper::BigEndian2Int(substr($FLVvideoHeader,
+                                $lengthSizeMinusOne = Helper::BigEndian2Int(substr($FLVvideoHeader,
                                                                                               7,
                                                                                               1));
-                                $numOfSequenceParameterSets = GetId3_Lib_Helper::BigEndian2Int(substr($FLVvideoHeader,
+                                $numOfSequenceParameterSets = Helper::BigEndian2Int(substr($FLVvideoHeader,
                                                                                                       8,
                                                                                                       1));
 
@@ -191,13 +196,13 @@ class GetId3_Module_AudioVideo_Flv extends GetId3_Handler_BaseHandler
                                     //	there is at least one SequenceParameterSet
                                     //	read size of the first SequenceParameterSet
                                     //$spsSize = GetId3_lib::BigEndian2Int(substr($FLVvideoHeader, 9, 2));
-                                    $spsSize = GetId3_Lib_Helper::LittleEndian2Int(substr($FLVvideoHeader,
+                                    $spsSize = Helper::LittleEndian2Int(substr($FLVvideoHeader,
                                                                                           9,
                                                                                           2));
                                     //	read the first SequenceParameterSet
                                     $sps = fread($this->getid3->fp, $spsSize);
                                     if (strlen($sps) == $spsSize) { //	make sure that whole SequenceParameterSet was red
-                                        $spsReader = new GetId3_Module_AudioVideo_AVCSequenceParameterSetReader($sps);
+                                        $spsReader = new GetId3\Module\AudioVideo\AVCSequenceParameterSetReader($sps);
                                         $spsReader->readData();
                                         $info['video']['resolution_x'] = $spsReader->getWidth();
                                         $info['video']['resolution_y'] = $spsReader->getHeight();
@@ -207,7 +212,7 @@ class GetId3_Module_AudioVideo_Flv extends GetId3_Handler_BaseHandler
                             // end: moysevichØgmail*com
                         } elseif ($info['flv']['video']['videoCodec'] == self::GETID3_FLV_VIDEO_H263) {
 
-                            $PictureSizeType = (GetId3_Lib_Helper::BigEndian2Int(substr($FLVvideoHeader,
+                            $PictureSizeType = (Helper::BigEndian2Int(substr($FLVvideoHeader,
                                                                                         3,
                                                                                         2))) >> 7;
                             $PictureSizeType = $PictureSizeType & 0x0007;
@@ -221,10 +226,10 @@ class GetId3_Module_AudioVideo_Flv extends GetId3_Handler_BaseHandler
                                     //$PictureSizeEnc <<= 1;
                                     //$info['video']['resolution_y'] = ($PictureSizeEnc & 0xFF00) >> 8;
 
-                                    $PictureSizeEnc['x'] = GetId3_Lib_Helper::BigEndian2Int(substr($FLVvideoHeader,
+                                    $PictureSizeEnc['x'] = Helper::BigEndian2Int(substr($FLVvideoHeader,
                                                                                                    4,
                                                                                                    2));
-                                    $PictureSizeEnc['y'] = GetId3_Lib_Helper::BigEndian2Int(substr($FLVvideoHeader,
+                                    $PictureSizeEnc['y'] = Helper::BigEndian2Int(substr($FLVvideoHeader,
                                                                                                    5,
                                                                                                    2));
                                     $PictureSizeEnc['x'] >>= 7;
@@ -234,10 +239,10 @@ class GetId3_Module_AudioVideo_Flv extends GetId3_Handler_BaseHandler
                                     break;
 
                                 case 1:
-                                    $PictureSizeEnc['x'] = GetId3_Lib_Helper::BigEndian2Int(substr($FLVvideoHeader,
+                                    $PictureSizeEnc['x'] = Helper::BigEndian2Int(substr($FLVvideoHeader,
                                                                                                    4,
                                                                                                    3));
-                                    $PictureSizeEnc['y'] = GetId3_Lib_Helper::BigEndian2Int(substr($FLVvideoHeader,
+                                    $PictureSizeEnc['y'] = Helper::BigEndian2Int(substr($FLVvideoHeader,
                                                                                                    6,
                                                                                                    3));
                                     $PictureSizeEnc['x'] >>= 7;
@@ -287,8 +292,8 @@ class GetId3_Module_AudioVideo_Flv extends GetId3_Handler_BaseHandler
                         $found_meta = true;
                         fseek($this->getid3->fp, -1, SEEK_CUR);
                         $datachunk = fread($this->getid3->fp, $DataLength);
-                        $AMFstream = new GetId3_Module_AudioVideo_AMFStream($datachunk);
-                        $reader = new GetId3_Module_AudioVideo_AMFReader($AMFstream);
+                        $AMFstream = new GetId3\Module\AudioVideo\AMFStream($datachunk);
+                        $reader = new GetId3\Module\AudioVideo\AMFReader($AMFstream);
                         $eventName = $reader->readData();
                         $info['flv']['meta'][$eventName] = $reader->readData();
                         unset($reader);
@@ -302,7 +307,7 @@ class GetId3_Module_AudioVideo_Flv extends GetId3_Handler_BaseHandler
                                         $info['video'][$destkey] = intval(round($info['flv']['meta']['onMetaData'][$sourcekey]));
                                         break;
                                     case 'audiodatarate':
-                                        $info['audio'][$destkey] = GetId3_Lib_Helper::CastAsInt(round($info['flv']['meta']['onMetaData'][$sourcekey] * 1000));
+                                        $info['audio'][$destkey] = Helper::CastAsInt(round($info['flv']['meta']['onMetaData'][$sourcekey] * 1000));
                                         break;
                                     case 'videodatarate':
                                     case 'frame_rate':

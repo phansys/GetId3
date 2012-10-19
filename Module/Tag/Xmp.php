@@ -1,4 +1,7 @@
 <?php
+
+namespace GetId3\Module\Tag;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -37,7 +40,7 @@
  * Module originally written [2009-Mar-25] by
  * Nigel Barnes <ngbarnesØhotmail*com>
  * Bundled into GetId3 with permission
- * called by GetId3 in GetId3_Module_Graphic_Jpg
+ * called by GetId3 in GetId3\Module\Graphic\Jpg
  *
  * SWISScenter Source
  * Nigel Barnes
@@ -55,7 +58,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Tag_Xmp
+class Xmp
 {
 	/**
 	* @var string

@@ -1,4 +1,12 @@
 <?php
+
+namespace GetId3\Module\AudioVideo;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Module\Audio\Mp3;
+use GetId3\Lib\Helper;
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -19,9 +27,9 @@
  * @author James Heinrich <info@getid3.org>
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
- * @uses GetId3_Module_Audio_Mp3
+ * @uses GetId3\Module\Audio\Mp3
  */
-class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
+class Quicktime extends BaseHandler
 {
 
     /**
@@ -52,19 +60,19 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 		$atomcounter = 0;
 
 		while ($offset < $info['avdataend']) {
-			if (!GetId3_Lib_Helper::intValueSupported($offset)) {
+			if (!Helper::intValueSupported($offset)) {
 				$info['error'][] = 'Unable to parse atom at offset '.$offset.' because beyond '.round(PHP_INT_MAX / 1073741824).'GB limit of PHP filesystem functions';
 				break;
 			}
 			fseek($this->getid3->fp, $offset, SEEK_SET);
 			$AtomHeader = fread($this->getid3->fp, 8);
 
-			$atomsize = GetId3_Lib_Helper::BigEndian2Int(substr($AtomHeader, 0, 4));
+			$atomsize = Helper::BigEndian2Int(substr($AtomHeader, 0, 4));
 			$atomname = substr($AtomHeader, 4, 4);
 
 			// 64-bit MOV patch by jlegateØktnc*com
 			if ($atomsize == 1) {
-				$atomsize = GetId3_Lib_Helper::BigEndian2Int(fread($this->getid3->fp, 8));
+				$atomsize = Helper::BigEndian2Int(fread($this->getid3->fp, 8));
 			}
 
 			$info['quicktime'][$atomname]['name']   = $atomname;
@@ -91,11 +99,11 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 						$OldAVDataEnd         = $info['avdataend'];
 						$info['avdataend']    = $info['quicktime'][$atomname]['offset'] + $info['quicktime'][$atomname]['size'];
 
-						$getid3_temp = new GetId3_GetId3();
+						$getid3_temp = new GetId3Core();
 						$getid3_temp->openfile($this->getid3->filename);
 						$getid3_temp->info['avdataoffset'] = $info['avdataoffset'];
 						$getid3_temp->info['avdataend']    = $info['avdataend'];
-						$getid3_mp3 = new GetId3_Module_Audio_Mp3($getid3_temp);
+						$getid3_mp3 = new Mp3($getid3_temp);
 						if ($getid3_mp3->MPEGaudioHeaderValid($getid3_mp3->MPEGaudioHeaderDecode(fread($this->getid3->fp, 4)))) {
 							$getid3_mp3->getOnlyMPEGaudioInfo($getid3_temp->info['avdataoffset'], false);
 							if (!empty($getid3_temp->info['warning'])) {
@@ -254,7 +262,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 			case "\x00\x00\x00\x03":
 			case "\x00\x00\x00\x04":
 			case "\x00\x00\x00\x05":
-				$atomname = GetId3_Lib_Helper::BigEndian2Int($atomname);
+				$atomname = Helper::BigEndian2Int($atomname);
 				$atom_structure['name'] = $atomname;
 				$atom_structure['subatoms'] = $this->QuicktimeParseContainerAtom($atom_data, $baseoffset + 8, $atomHierarchy, $ParseAllPossibleAtoms);
 				break;
@@ -376,8 +384,8 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 			case '----': // itunes specific
 				if ($atom_parent == 'udta') {
 					// User data atom handler
-					$atom_structure['data_length'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 0, 2));
-					$atom_structure['language_id'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 2, 2));
+					$atom_structure['data_length'] = Helper::BigEndian2Int(substr($atom_data, 0, 2));
+					$atom_structure['language_id'] = Helper::BigEndian2Int(substr($atom_data, 2, 2));
 					$atom_structure['data']        =                           substr($atom_data, 4);
 
 					$atom_structure['language']    = $this->QuicktimeLanguageLookup($atom_structure['language_id']);
@@ -391,7 +399,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 						// not sure what it means, but observed on iPhone4 data.
 						// Each $atom_data has 2 bytes of datasize, plus 0x10B5, then data
 						while ($atomoffset < strlen($atom_data)) {
-							$boxsmallsize = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $atomoffset,     2));
+							$boxsmallsize = Helper::BigEndian2Int(substr($atom_data, $atomoffset,     2));
 							$boxsmalltype =                           substr($atom_data, $atomoffset + 2, 2);
 							$boxsmalldata =                           substr($atom_data, $atomoffset + 4, $boxsmallsize);
 							switch ($boxsmalltype) {
@@ -399,7 +407,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 									$atom_structure['data'] = $boxsmalldata;
 									break;
 								default:
-									$info['warning'][] = 'Unknown QuickTime smallbox type: "'.GetId3_Lib_Helper::PrintHexBytes($boxsmalltype).'" at offset '.$baseoffset;
+									$info['warning'][] = 'Unknown QuickTime smallbox type: "'.Helper::PrintHexBytes($boxsmalltype).'" at offset '.$baseoffset;
 									$atom_structure['data'] = $atom_data;
 									break;
 							}
@@ -407,7 +415,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 						}
 					} else {
 						while ($atomoffset < strlen($atom_data)) {
-							$boxsize = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $atomoffset, 4));
+							$boxsize = Helper::BigEndian2Int(substr($atom_data, $atomoffset, 4));
 							$boxtype =                           substr($atom_data, $atomoffset + 4, 4);
 							$boxdata =                           substr($atom_data, $atomoffset + 8, $boxsize - 8);
 							if ($boxsize <= 1) {
@@ -425,8 +433,8 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 									break;
 
 								case 'data':
-									$atom_structure['version']   = GetId3_Lib_Helper::BigEndian2Int(substr($boxdata,  0, 1));
-									$atom_structure['flags_raw'] = GetId3_Lib_Helper::BigEndian2Int(substr($boxdata,  1, 3));
+									$atom_structure['version']   = Helper::BigEndian2Int(substr($boxdata,  0, 1));
+									$atom_structure['flags_raw'] = Helper::BigEndian2Int(substr($boxdata,  1, 3));
 									switch ($atom_structure['flags_raw']) {
 										case 0:  // data flag
 										case 21: // tmpo/cpil flag
@@ -434,38 +442,38 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 												case 'cpil':
 												case 'pcst':
 												case 'pgap':
-													$atom_structure['data'] = GetId3_Lib_Helper::BigEndian2Int(substr($boxdata, 8, 1));
+													$atom_structure['data'] = Helper::BigEndian2Int(substr($boxdata, 8, 1));
 													break;
 
 												case 'tmpo':
-													$atom_structure['data'] = GetId3_Lib_Helper::BigEndian2Int(substr($boxdata, 8, 2));
+													$atom_structure['data'] = Helper::BigEndian2Int(substr($boxdata, 8, 2));
 													break;
 
 												case 'disk':
 												case 'trkn':
-													$num       = GetId3_Lib_Helper::BigEndian2Int(substr($boxdata, 10, 2));
-													$num_total = GetId3_Lib_Helper::BigEndian2Int(substr($boxdata, 12, 2));
+													$num       = Helper::BigEndian2Int(substr($boxdata, 10, 2));
+													$num_total = Helper::BigEndian2Int(substr($boxdata, 12, 2));
 													$atom_structure['data']  = empty($num) ? '' : $num;
 													$atom_structure['data'] .= empty($num_total) ? '' : '/'.$num_total;
 													break;
 
 												case 'gnre':
-													$GenreID = GetId3_Lib_Helper::BigEndian2Int(substr($boxdata, 8, 4));
-													$atom_structure['data']    = GetId3_Module_Tag_Id3v1::LookupGenreName($GenreID - 1);
+													$GenreID = Helper::BigEndian2Int(substr($boxdata, 8, 4));
+													$atom_structure['data']    = GetId3\Module\Tag\Id3v1::LookupGenreName($GenreID - 1);
 													break;
 
 												case 'rtng':
-													$atom_structure[$atomname] = GetId3_Lib_Helper::BigEndian2Int(substr($boxdata, 8, 1));
+													$atom_structure[$atomname] = Helper::BigEndian2Int(substr($boxdata, 8, 1));
 													$atom_structure['data']    = $this->QuicktimeContentRatingLookup($atom_structure[$atomname]);
 													break;
 
 												case 'stik':
-													$atom_structure[$atomname] = GetId3_Lib_Helper::BigEndian2Int(substr($boxdata, 8, 1));
+													$atom_structure[$atomname] = Helper::BigEndian2Int(substr($boxdata, 8, 1));
 													$atom_structure['data']    = $this->QuicktimeSTIKLookup($atom_structure[$atomname]);
 													break;
 
 												case 'sfID':
-													$atom_structure[$atomname] = GetId3_Lib_Helper::BigEndian2Int(substr($boxdata, 8, 4));
+													$atom_structure[$atomname] = Helper::BigEndian2Int(substr($boxdata, 8, 4));
 													$atom_structure['data']    = $this->QuicktimeStoreFrontCodeLookup($atom_structure[$atomname]);
 													break;
 
@@ -475,7 +483,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 													break;
 
 												default:
-													$atom_structure['data'] = GetId3_Lib_Helper::BigEndian2Int(substr($boxdata, 8, 4));
+													$atom_structure['data'] = Helper::BigEndian2Int(substr($boxdata, 8, 4));
 											}
 											break;
 
@@ -489,7 +497,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 									break;
 
 								default:
-									$info['warning'][] = 'Unknown QuickTime box type: "'.GetId3_Lib_Helper::PrintHexBytes($boxtype).'" at offset '.$baseoffset;
+									$info['warning'][] = 'Unknown QuickTime box type: "'.Helper::PrintHexBytes($boxtype).'" at offset '.$baseoffset;
 									$atom_structure['data'] = $atom_data;
 
 							}
@@ -501,22 +509,22 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 
 			case 'play': // auto-PLAY atom
-				$atom_structure['autoplay'] = (bool) GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['autoplay'] = (bool) Helper::BigEndian2Int(substr($atom_data,  0, 1));
 
 				$info['quicktime']['autoplay'] = $atom_structure['autoplay'];
 				break;
 
 
 			case 'WLOC': // Window LOCation atom
-				$atom_structure['location_x']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 2));
-				$atom_structure['location_y']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  2, 2));
+				$atom_structure['location_x']  = Helper::BigEndian2Int(substr($atom_data,  0, 2));
+				$atom_structure['location_y']  = Helper::BigEndian2Int(substr($atom_data,  2, 2));
 				break;
 
 
 			case 'LOOP': // LOOPing atom
 			case 'SelO': // play SELection Only atom
 			case 'AllF': // play ALL Frames atom
-				$atom_structure['data'] = GetId3_Lib_Helper::BigEndian2Int($atom_data);
+				$atom_structure['data'] = Helper::BigEndian2Int($atom_data);
 				break;
 
 
@@ -531,7 +539,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 			case 'cmvd': // Compressed MooV Data atom
 				// Code by ubergeekØubergeek*tv based on information from
 				// http://developer.apple.com/quicktime/icefloe/dispatch012.html
-				$atom_structure['unCompressedSize'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 0, 4));
+				$atom_structure['unCompressedSize'] = Helper::BigEndian2Int(substr($atom_data, 0, 4));
 
 				$CompressedFileData = substr($atom_data, 4);
 				if ($UncompressedHeader = @gzuncompress($CompressedFileData)) {
@@ -549,12 +557,12 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 
 			case 'rdrf': // Reference movie Data ReFerence atom
-				$atom_structure['version']                = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']              = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3));
+				$atom_structure['version']                = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']              = Helper::BigEndian2Int(substr($atom_data,  1, 3));
 				$atom_structure['flags']['internal_data'] = (bool) ($atom_structure['flags_raw'] & 0x000001);
 
 				$atom_structure['reference_type_name']    =                           substr($atom_data,  4, 4);
-				$atom_structure['reference_length']       = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  8, 4));
+				$atom_structure['reference_length']       = Helper::BigEndian2Int(substr($atom_data,  8, 4));
 				switch ($atom_structure['reference_type_name']) {
 					case 'url ':
 						$atom_structure['url']            =       $this->NoNullString(substr($atom_data, 12));
@@ -576,52 +584,52 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 
 			case 'rmqu': // Reference Movie QUality atom
-				$atom_structure['movie_quality'] = GetId3_Lib_Helper::BigEndian2Int($atom_data);
+				$atom_structure['movie_quality'] = Helper::BigEndian2Int($atom_data);
 				break;
 
 
 			case 'rmcs': // Reference Movie Cpu Speed atom
-				$atom_structure['version']          = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-				$atom_structure['cpu_speed_rating'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 2));
+				$atom_structure['version']          = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']        = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['cpu_speed_rating'] = Helper::BigEndian2Int(substr($atom_data,  4, 2));
 				break;
 
 
 			case 'rmvc': // Reference Movie Version Check atom
-				$atom_structure['version']            = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']          = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['version']            = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']          = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
 				$atom_structure['gestalt_selector']   =                           substr($atom_data,  4, 4);
-				$atom_structure['gestalt_value_mask'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  8, 4));
-				$atom_structure['gestalt_value']      = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 12, 4));
-				$atom_structure['gestalt_check_type'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 14, 2));
+				$atom_structure['gestalt_value_mask'] = Helper::BigEndian2Int(substr($atom_data,  8, 4));
+				$atom_structure['gestalt_value']      = Helper::BigEndian2Int(substr($atom_data, 12, 4));
+				$atom_structure['gestalt_check_type'] = Helper::BigEndian2Int(substr($atom_data, 14, 2));
 				break;
 
 
 			case 'rmcd': // Reference Movie Component check atom
-				$atom_structure['version']                = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']              = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['version']                = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']              = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
 				$atom_structure['component_type']         =                           substr($atom_data,  4, 4);
 				$atom_structure['component_subtype']      =                           substr($atom_data,  8, 4);
 				$atom_structure['component_manufacturer'] =                           substr($atom_data, 12, 4);
-				$atom_structure['component_flags_raw']    = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 16, 4));
-				$atom_structure['component_flags_mask']   = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 20, 4));
-				$atom_structure['component_min_version']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 24, 4));
+				$atom_structure['component_flags_raw']    = Helper::BigEndian2Int(substr($atom_data, 16, 4));
+				$atom_structure['component_flags_mask']   = Helper::BigEndian2Int(substr($atom_data, 20, 4));
+				$atom_structure['component_min_version']  = Helper::BigEndian2Int(substr($atom_data, 24, 4));
 				break;
 
 
 			case 'rmdr': // Reference Movie Data Rate atom
-				$atom_structure['version']       = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']     = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-				$atom_structure['data_rate']     = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
+				$atom_structure['version']       = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']     = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['data_rate']     = Helper::BigEndian2Int(substr($atom_data,  4, 4));
 
 				$atom_structure['data_rate_bps'] = $atom_structure['data_rate'] * 10;
 				break;
 
 
 			case 'rmla': // Reference Movie Language Atom
-				$atom_structure['version']     = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']   = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-				$atom_structure['language_id'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 2));
+				$atom_structure['version']     = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']   = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['language_id'] = Helper::BigEndian2Int(substr($atom_data,  4, 2));
 
 				$atom_structure['language']    = $this->QuicktimeLanguageLookup($atom_structure['language_id']);
 				if (empty($info['comments']['language']) || (!in_array($atom_structure['language'], $info['comments']['language']))) {
@@ -631,19 +639,19 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 
 			case 'rmla': // Reference Movie Language Atom
-				$atom_structure['version']   = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-				$atom_structure['track_id']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 2));
+				$atom_structure['version']   = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw'] = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['track_id']  = Helper::BigEndian2Int(substr($atom_data,  4, 2));
 				break;
 
 
 			case 'ptv ': // Print To Video - defines a movie's full screen mode
 				// http://developer.apple.com/documentation/QuickTime/APIREF/SOURCESIV/at_ptv-_pg.htm
-				$atom_structure['display_size_raw']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 0, 2));
-				$atom_structure['reserved_1']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 2, 2)); // hardcoded: 0x0000
-				$atom_structure['reserved_2']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 4, 2)); // hardcoded: 0x0000
-				$atom_structure['slide_show_flag']   = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 6, 1));
-				$atom_structure['play_on_open_flag'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 7, 1));
+				$atom_structure['display_size_raw']  = Helper::BigEndian2Int(substr($atom_data, 0, 2));
+				$atom_structure['reserved_1']        = Helper::BigEndian2Int(substr($atom_data, 2, 2)); // hardcoded: 0x0000
+				$atom_structure['reserved_2']        = Helper::BigEndian2Int(substr($atom_data, 4, 2)); // hardcoded: 0x0000
+				$atom_structure['slide_show_flag']   = Helper::BigEndian2Int(substr($atom_data, 6, 1));
+				$atom_structure['play_on_open_flag'] = Helper::BigEndian2Int(substr($atom_data, 7, 1));
 
 				$atom_structure['flags']['play_on_open'] = (bool) $atom_structure['play_on_open_flag'];
 				$atom_structure['flags']['slide_show']   = (bool) $atom_structure['slide_show_flag'];
@@ -662,42 +670,42 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 
 			case 'stsd': // Sample Table Sample Description atom
-				$atom_structure['version']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']      = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-				$atom_structure['number_entries'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
+				$atom_structure['version']        = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']      = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['number_entries'] = Helper::BigEndian2Int(substr($atom_data,  4, 4));
 				$stsdEntriesDataOffset = 8;
 				for ($i = 0; $i < $atom_structure['number_entries']; $i++) {
-					$atom_structure['sample_description_table'][$i]['size']             = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $stsdEntriesDataOffset, 4));
+					$atom_structure['sample_description_table'][$i]['size']             = Helper::BigEndian2Int(substr($atom_data, $stsdEntriesDataOffset, 4));
 					$stsdEntriesDataOffset += 4;
 					$atom_structure['sample_description_table'][$i]['data_format']      =                           substr($atom_data, $stsdEntriesDataOffset, 4);
 					$stsdEntriesDataOffset += 4;
-					$atom_structure['sample_description_table'][$i]['reserved']         = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $stsdEntriesDataOffset, 6));
+					$atom_structure['sample_description_table'][$i]['reserved']         = Helper::BigEndian2Int(substr($atom_data, $stsdEntriesDataOffset, 6));
 					$stsdEntriesDataOffset += 6;
-					$atom_structure['sample_description_table'][$i]['reference_index']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $stsdEntriesDataOffset, 2));
+					$atom_structure['sample_description_table'][$i]['reference_index']  = Helper::BigEndian2Int(substr($atom_data, $stsdEntriesDataOffset, 2));
 					$stsdEntriesDataOffset += 2;
 					$atom_structure['sample_description_table'][$i]['data']             =                           substr($atom_data, $stsdEntriesDataOffset, ($atom_structure['sample_description_table'][$i]['size'] - 4 - 4 - 6 - 2));
 					$stsdEntriesDataOffset += ($atom_structure['sample_description_table'][$i]['size'] - 4 - 4 - 6 - 2);
 
-					$atom_structure['sample_description_table'][$i]['encoder_version']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'],  0, 2));
-					$atom_structure['sample_description_table'][$i]['encoder_revision'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'],  2, 2));
+					$atom_structure['sample_description_table'][$i]['encoder_version']  = Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'],  0, 2));
+					$atom_structure['sample_description_table'][$i]['encoder_revision'] = Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'],  2, 2));
 					$atom_structure['sample_description_table'][$i]['encoder_vendor']   =                           substr($atom_structure['sample_description_table'][$i]['data'],  4, 4);
 
 					switch ($atom_structure['sample_description_table'][$i]['encoder_vendor']) {
 
 						case "\x00\x00\x00\x00":
 							// audio atom
-							$atom_structure['sample_description_table'][$i]['audio_channels']       =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'],  8,  2));
-							$atom_structure['sample_description_table'][$i]['audio_bit_depth']      =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 10,  2));
-							$atom_structure['sample_description_table'][$i]['audio_compression_id'] =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 12,  2));
-							$atom_structure['sample_description_table'][$i]['audio_packet_size']    =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 14,  2));
-							$atom_structure['sample_description_table'][$i]['audio_sample_rate']    = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_structure['sample_description_table'][$i]['data'], 16,  4));
+							$atom_structure['sample_description_table'][$i]['audio_channels']       =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'],  8,  2));
+							$atom_structure['sample_description_table'][$i]['audio_bit_depth']      =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 10,  2));
+							$atom_structure['sample_description_table'][$i]['audio_compression_id'] =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 12,  2));
+							$atom_structure['sample_description_table'][$i]['audio_packet_size']    =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 14,  2));
+							$atom_structure['sample_description_table'][$i]['audio_sample_rate']    = Helper::FixedPoint16_16(substr($atom_structure['sample_description_table'][$i]['data'], 16,  4));
 
 							switch ($atom_structure['sample_description_table'][$i]['data_format']) {
 								case 'avc1':
 								case 'mp4v':
 									$info['fileformat'] = 'mp4';
 									$info['video']['fourcc'] = $atom_structure['sample_description_table'][$i]['data_format'];
-									//$info['warning'][] = 'This version of GetId3() ['.$this->getid3->version().'] does not fully support MPEG-4 audio/video streams'; // 2011-02-18: why am I warning about this again? What's not supported?
+									//$info['warning'][] = 'This version of GetId3Core() ['.$this->getid3->version().'] does not fully support MPEG-4 audio/video streams'; // 2011-02-18: why am I warning about this again? What's not supported?
 									break;
 
 								case 'qtvr':
@@ -735,18 +743,18 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 								default:
 									// video atom
-									$atom_structure['sample_description_table'][$i]['video_temporal_quality']  =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'],  8,  4));
-									$atom_structure['sample_description_table'][$i]['video_spatial_quality']   =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 12,  4));
-									$atom_structure['sample_description_table'][$i]['video_frame_width']       =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 16,  2));
-									$atom_structure['sample_description_table'][$i]['video_frame_height']      =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 18,  2));
-									$atom_structure['sample_description_table'][$i]['video_resolution_x']      = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_structure['sample_description_table'][$i]['data'], 20,  4));
-									$atom_structure['sample_description_table'][$i]['video_resolution_y']      = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_structure['sample_description_table'][$i]['data'], 24,  4));
-									$atom_structure['sample_description_table'][$i]['video_data_size']         =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 28,  4));
-									$atom_structure['sample_description_table'][$i]['video_frame_count']       =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 32,  2));
-									$atom_structure['sample_description_table'][$i]['video_encoder_name_len']  =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 34,  1));
+									$atom_structure['sample_description_table'][$i]['video_temporal_quality']  =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'],  8,  4));
+									$atom_structure['sample_description_table'][$i]['video_spatial_quality']   =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 12,  4));
+									$atom_structure['sample_description_table'][$i]['video_frame_width']       =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 16,  2));
+									$atom_structure['sample_description_table'][$i]['video_frame_height']      =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 18,  2));
+									$atom_structure['sample_description_table'][$i]['video_resolution_x']      = Helper::FixedPoint16_16(substr($atom_structure['sample_description_table'][$i]['data'], 20,  4));
+									$atom_structure['sample_description_table'][$i]['video_resolution_y']      = Helper::FixedPoint16_16(substr($atom_structure['sample_description_table'][$i]['data'], 24,  4));
+									$atom_structure['sample_description_table'][$i]['video_data_size']         =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 28,  4));
+									$atom_structure['sample_description_table'][$i]['video_frame_count']       =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 32,  2));
+									$atom_structure['sample_description_table'][$i]['video_encoder_name_len']  =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 34,  1));
 									$atom_structure['sample_description_table'][$i]['video_encoder_name']      =                             substr($atom_structure['sample_description_table'][$i]['data'], 35, $atom_structure['sample_description_table'][$i]['video_encoder_name_len']);
-									$atom_structure['sample_description_table'][$i]['video_pixel_color_depth'] =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 66,  2));
-									$atom_structure['sample_description_table'][$i]['video_color_table_id']    =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 68,  2));
+									$atom_structure['sample_description_table'][$i]['video_pixel_color_depth'] =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 66,  2));
+									$atom_structure['sample_description_table'][$i]['video_color_table_id']    =   Helper::BigEndian2Int(substr($atom_structure['sample_description_table'][$i]['data'], 68,  2));
 
 									$atom_structure['sample_description_table'][$i]['video_pixel_color_type']  = (($atom_structure['sample_description_table'][$i]['video_pixel_color_depth'] > 32) ? 'grayscale' : 'color');
 									$atom_structure['sample_description_table'][$i]['video_pixel_color_name']  = $this->QuicktimeColorNameLookup($atom_structure['sample_description_table'][$i]['video_pixel_color_depth']);
@@ -807,16 +815,16 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 
 			case 'stts': // Sample Table Time-to-Sample atom
-				$atom_structure['version']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']      = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-				$atom_structure['number_entries'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
+				$atom_structure['version']        = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']      = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['number_entries'] = Helper::BigEndian2Int(substr($atom_data,  4, 4));
 				$sttsEntriesDataOffset = 8;
 				//$FrameRateCalculatorArray = array();
 				$frames_count = 0;
 				for ($i = 0; $i < $atom_structure['number_entries']; $i++) {
-					$atom_structure['time_to_sample_table'][$i]['sample_count']    = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $sttsEntriesDataOffset, 4));
+					$atom_structure['time_to_sample_table'][$i]['sample_count']    = Helper::BigEndian2Int(substr($atom_data, $sttsEntriesDataOffset, 4));
 					$sttsEntriesDataOffset += 4;
-					$atom_structure['time_to_sample_table'][$i]['sample_duration'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $sttsEntriesDataOffset, 4));
+					$atom_structure['time_to_sample_table'][$i]['sample_duration'] = Helper::BigEndian2Int(substr($atom_data, $sttsEntriesDataOffset, 4));
 					$sttsEntriesDataOffset += 4;
 
 					$frames_count += $atom_structure['time_to_sample_table'][$i]['sample_count'];
@@ -855,12 +863,12 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 			case 'stss': // Sample Table Sync Sample (key frames) atom
 				if ($ParseAllPossibleAtoms) {
-					$atom_structure['version']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-					$atom_structure['flags_raw']      = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-					$atom_structure['number_entries'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
+					$atom_structure['version']        = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+					$atom_structure['flags_raw']      = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+					$atom_structure['number_entries'] = Helper::BigEndian2Int(substr($atom_data,  4, 4));
 					$stssEntriesDataOffset = 8;
 					for ($i = 0; $i < $atom_structure['number_entries']; $i++) {
-						$atom_structure['time_to_sample_table'][$i] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $stssEntriesDataOffset, 4));
+						$atom_structure['time_to_sample_table'][$i] = Helper::BigEndian2Int(substr($atom_data, $stssEntriesDataOffset, 4));
 						$stssEntriesDataOffset += 4;
 					}
 				}
@@ -869,16 +877,16 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 			case 'stsc': // Sample Table Sample-to-Chunk atom
 				if ($ParseAllPossibleAtoms) {
-					$atom_structure['version']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-					$atom_structure['flags_raw']      = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-					$atom_structure['number_entries'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
+					$atom_structure['version']        = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+					$atom_structure['flags_raw']      = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+					$atom_structure['number_entries'] = Helper::BigEndian2Int(substr($atom_data,  4, 4));
 					$stscEntriesDataOffset = 8;
 					for ($i = 0; $i < $atom_structure['number_entries']; $i++) {
-						$atom_structure['sample_to_chunk_table'][$i]['first_chunk']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $stscEntriesDataOffset, 4));
+						$atom_structure['sample_to_chunk_table'][$i]['first_chunk']        = Helper::BigEndian2Int(substr($atom_data, $stscEntriesDataOffset, 4));
 						$stscEntriesDataOffset += 4;
-						$atom_structure['sample_to_chunk_table'][$i]['samples_per_chunk']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $stscEntriesDataOffset, 4));
+						$atom_structure['sample_to_chunk_table'][$i]['samples_per_chunk']  = Helper::BigEndian2Int(substr($atom_data, $stscEntriesDataOffset, 4));
 						$stscEntriesDataOffset += 4;
-						$atom_structure['sample_to_chunk_table'][$i]['sample_description'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $stscEntriesDataOffset, 4));
+						$atom_structure['sample_to_chunk_table'][$i]['sample_description'] = Helper::BigEndian2Int(substr($atom_data, $stscEntriesDataOffset, 4));
 						$stscEntriesDataOffset += 4;
 					}
 				}
@@ -887,14 +895,14 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 			case 'stsz': // Sample Table SiZe atom
 				if ($ParseAllPossibleAtoms) {
-					$atom_structure['version']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-					$atom_structure['flags_raw']      = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-					$atom_structure['sample_size']    = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
-					$atom_structure['number_entries'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  8, 4));
+					$atom_structure['version']        = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+					$atom_structure['flags_raw']      = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+					$atom_structure['sample_size']    = Helper::BigEndian2Int(substr($atom_data,  4, 4));
+					$atom_structure['number_entries'] = Helper::BigEndian2Int(substr($atom_data,  8, 4));
 					$stszEntriesDataOffset = 12;
 					if ($atom_structure['sample_size'] == 0) {
 						for ($i = 0; $i < $atom_structure['number_entries']; $i++) {
-							$atom_structure['sample_size_table'][$i] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $stszEntriesDataOffset, 4));
+							$atom_structure['sample_size_table'][$i] = Helper::BigEndian2Int(substr($atom_data, $stszEntriesDataOffset, 4));
 							$stszEntriesDataOffset += 4;
 						}
 					}
@@ -904,12 +912,12 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 			case 'stco': // Sample Table Chunk Offset atom
 				if ($ParseAllPossibleAtoms) {
-					$atom_structure['version']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-					$atom_structure['flags_raw']      = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-					$atom_structure['number_entries'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
+					$atom_structure['version']        = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+					$atom_structure['flags_raw']      = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+					$atom_structure['number_entries'] = Helper::BigEndian2Int(substr($atom_data,  4, 4));
 					$stcoEntriesDataOffset = 8;
 					for ($i = 0; $i < $atom_structure['number_entries']; $i++) {
-						$atom_structure['chunk_offset_table'][$i] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $stcoEntriesDataOffset, 4));
+						$atom_structure['chunk_offset_table'][$i] = Helper::BigEndian2Int(substr($atom_data, $stcoEntriesDataOffset, 4));
 						$stcoEntriesDataOffset += 4;
 					}
 				}
@@ -918,12 +926,12 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 			case 'co64': // Chunk Offset 64-bit (version of "stco" that supports > 2GB files)
 				if ($ParseAllPossibleAtoms) {
-					$atom_structure['version']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-					$atom_structure['flags_raw']      = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-					$atom_structure['number_entries'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
+					$atom_structure['version']        = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+					$atom_structure['flags_raw']      = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+					$atom_structure['number_entries'] = Helper::BigEndian2Int(substr($atom_data,  4, 4));
 					$stcoEntriesDataOffset = 8;
 					for ($i = 0; $i < $atom_structure['number_entries']; $i++) {
-						$atom_structure['chunk_offset_table'][$i] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $stcoEntriesDataOffset, 8));
+						$atom_structure['chunk_offset_table'][$i] = Helper::BigEndian2Int(substr($atom_data, $stcoEntriesDataOffset, 8));
 						$stcoEntriesDataOffset += 8;
 					}
 				}
@@ -931,18 +939,18 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 
 			case 'dref': // Data REFerence atom
-				$atom_structure['version']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']      = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-				$atom_structure['number_entries'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
+				$atom_structure['version']        = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']      = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['number_entries'] = Helper::BigEndian2Int(substr($atom_data,  4, 4));
 				$drefDataOffset = 8;
 				for ($i = 0; $i < $atom_structure['number_entries']; $i++) {
-					$atom_structure['data_references'][$i]['size']                    = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $drefDataOffset, 4));
+					$atom_structure['data_references'][$i]['size']                    = Helper::BigEndian2Int(substr($atom_data, $drefDataOffset, 4));
 					$drefDataOffset += 4;
 					$atom_structure['data_references'][$i]['type']                    =               substr($atom_data, $drefDataOffset, 4);
 					$drefDataOffset += 4;
-					$atom_structure['data_references'][$i]['version']                 = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  $drefDataOffset, 1));
+					$atom_structure['data_references'][$i]['version']                 = Helper::BigEndian2Int(substr($atom_data,  $drefDataOffset, 1));
 					$drefDataOffset += 1;
-					$atom_structure['data_references'][$i]['flags_raw']               = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  $drefDataOffset, 3)); // hardcoded: 0x0000
+					$atom_structure['data_references'][$i]['flags_raw']               = Helper::BigEndian2Int(substr($atom_data,  $drefDataOffset, 3)); // hardcoded: 0x0000
 					$drefDataOffset += 3;
 					$atom_structure['data_references'][$i]['data']                    =               substr($atom_data, $drefDataOffset, ($atom_structure['data_references'][$i]['size'] - 4 - 4 - 1 - 3));
 					$drefDataOffset += ($atom_structure['data_references'][$i]['size'] - 4 - 4 - 1 - 3);
@@ -953,45 +961,45 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 
 			case 'gmin': // base Media INformation atom
-				$atom_structure['version']                = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']              = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-				$atom_structure['graphics_mode']          = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 2));
-				$atom_structure['opcolor_red']            = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  6, 2));
-				$atom_structure['opcolor_green']          = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  8, 2));
-				$atom_structure['opcolor_blue']           = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 10, 2));
-				$atom_structure['balance']                = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 12, 2));
-				$atom_structure['reserved']               = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 14, 2));
+				$atom_structure['version']                = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']              = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['graphics_mode']          = Helper::BigEndian2Int(substr($atom_data,  4, 2));
+				$atom_structure['opcolor_red']            = Helper::BigEndian2Int(substr($atom_data,  6, 2));
+				$atom_structure['opcolor_green']          = Helper::BigEndian2Int(substr($atom_data,  8, 2));
+				$atom_structure['opcolor_blue']           = Helper::BigEndian2Int(substr($atom_data, 10, 2));
+				$atom_structure['balance']                = Helper::BigEndian2Int(substr($atom_data, 12, 2));
+				$atom_structure['reserved']               = Helper::BigEndian2Int(substr($atom_data, 14, 2));
 				break;
 
 
 			case 'smhd': // Sound Media information HeaDer atom
-				$atom_structure['version']                = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']              = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-				$atom_structure['balance']                = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 2));
-				$atom_structure['reserved']               = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  6, 2));
+				$atom_structure['version']                = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']              = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['balance']                = Helper::BigEndian2Int(substr($atom_data,  4, 2));
+				$atom_structure['reserved']               = Helper::BigEndian2Int(substr($atom_data,  6, 2));
 				break;
 
 
 			case 'vmhd': // Video Media information HeaDer atom
-				$atom_structure['version']                = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']              = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3));
-				$atom_structure['graphics_mode']          = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 2));
-				$atom_structure['opcolor_red']            = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  6, 2));
-				$atom_structure['opcolor_green']          = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  8, 2));
-				$atom_structure['opcolor_blue']           = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 10, 2));
+				$atom_structure['version']                = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']              = Helper::BigEndian2Int(substr($atom_data,  1, 3));
+				$atom_structure['graphics_mode']          = Helper::BigEndian2Int(substr($atom_data,  4, 2));
+				$atom_structure['opcolor_red']            = Helper::BigEndian2Int(substr($atom_data,  6, 2));
+				$atom_structure['opcolor_green']          = Helper::BigEndian2Int(substr($atom_data,  8, 2));
+				$atom_structure['opcolor_blue']           = Helper::BigEndian2Int(substr($atom_data, 10, 2));
 
 				$atom_structure['flags']['no_lean_ahead'] = (bool) ($atom_structure['flags_raw'] & 0x001);
 				break;
 
 
 			case 'hdlr': // HanDLeR reference atom
-				$atom_structure['version']                = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']              = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['version']                = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']              = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
 				$atom_structure['component_type']         =                           substr($atom_data,  4, 4);
 				$atom_structure['component_subtype']      =                           substr($atom_data,  8, 4);
 				$atom_structure['component_manufacturer'] =                           substr($atom_data, 12, 4);
-				$atom_structure['component_flags_raw']    = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 16, 4));
-				$atom_structure['component_flags_mask']   = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 20, 4));
+				$atom_structure['component_flags_raw']    = Helper::BigEndian2Int(substr($atom_data, 16, 4));
+				$atom_structure['component_flags_mask']   = Helper::BigEndian2Int(substr($atom_data, 20, 4));
 				$atom_structure['component_name']         =      $this->Pascal2String(substr($atom_data, 24));
 
 				if (($atom_structure['component_subtype'] == 'STpn') && ($atom_structure['component_manufacturer'] == 'zzzz')) {
@@ -1001,14 +1009,14 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 
 			case 'mdhd': // MeDia HeaDer atom
-				$atom_structure['version']               = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']             = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-				$atom_structure['creation_time']         = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
-				$atom_structure['modify_time']           = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  8, 4));
-				$atom_structure['time_scale']            = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 12, 4));
-				$atom_structure['duration']              = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 16, 4));
-				$atom_structure['language_id']           = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 20, 2));
-				$atom_structure['quality']               = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 22, 2));
+				$atom_structure['version']               = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']             = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['creation_time']         = Helper::BigEndian2Int(substr($atom_data,  4, 4));
+				$atom_structure['modify_time']           = Helper::BigEndian2Int(substr($atom_data,  8, 4));
+				$atom_structure['time_scale']            = Helper::BigEndian2Int(substr($atom_data, 12, 4));
+				$atom_structure['duration']              = Helper::BigEndian2Int(substr($atom_data, 16, 4));
+				$atom_structure['language_id']           = Helper::BigEndian2Int(substr($atom_data, 20, 2));
+				$atom_structure['quality']               = Helper::BigEndian2Int(substr($atom_data, 22, 2));
 
 				if ($atom_structure['time_scale'] == 0) {
 					$info['error'][] = 'Corrupt Quicktime file: mdhd.time_scale == zero';
@@ -1016,8 +1024,8 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 				}
 				$info['quicktime']['time_scale'] = (isset($info['quicktime']['time_scale']) ? max($info['quicktime']['time_scale'], $atom_structure['time_scale']) : $atom_structure['time_scale']);
 
-				$atom_structure['creation_time_unix']    = GetId3_Lib_Helper::DateMac2Unix($atom_structure['creation_time']);
-				$atom_structure['modify_time_unix']      = GetId3_Lib_Helper::DateMac2Unix($atom_structure['modify_time']);
+				$atom_structure['creation_time_unix']    = Helper::DateMac2Unix($atom_structure['creation_time']);
+				$atom_structure['modify_time_unix']      = Helper::DateMac2Unix($atom_structure['modify_time']);
 				$atom_structure['playtime_seconds']      = $atom_structure['duration'] / $atom_structure['time_scale'];
 				$atom_structure['language']              = $this->QuicktimeLanguageLookup($atom_structure['language_id']);
 				if (empty($info['comments']['language']) || (!in_array($atom_structure['language'], $info['comments']['language']))) {
@@ -1027,27 +1035,27 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 
 			case 'pnot': // Preview atom
-				$atom_structure['modification_date']      = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 4)); // "standard Macintosh format"
-				$atom_structure['version_number']         = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 2)); // hardcoded: 0x00
+				$atom_structure['modification_date']      = Helper::BigEndian2Int(substr($atom_data,  0, 4)); // "standard Macintosh format"
+				$atom_structure['version_number']         = Helper::BigEndian2Int(substr($atom_data,  4, 2)); // hardcoded: 0x00
 				$atom_structure['atom_type']              =               substr($atom_data,  6, 4);        // usually: 'PICT'
-				$atom_structure['atom_index']             = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 10, 2)); // usually: 0x01
+				$atom_structure['atom_index']             = Helper::BigEndian2Int(substr($atom_data, 10, 2)); // usually: 0x01
 
-				$atom_structure['modification_date_unix'] = GetId3_Lib_Helper::DateMac2Unix($atom_structure['modification_date']);
+				$atom_structure['modification_date_unix'] = Helper::DateMac2Unix($atom_structure['modification_date']);
 				break;
 
 
 			case 'crgn': // Clipping ReGioN atom
-				$atom_structure['region_size']   = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 2)); // The Region size, Region boundary box,
-				$atom_structure['boundary_box']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  2, 8)); // and Clipping region data fields
+				$atom_structure['region_size']   = Helper::BigEndian2Int(substr($atom_data,  0, 2)); // The Region size, Region boundary box,
+				$atom_structure['boundary_box']  = Helper::BigEndian2Int(substr($atom_data,  2, 8)); // and Clipping region data fields
 				$atom_structure['clipping_data'] =               substr($atom_data, 10);           // constitute a QuickDraw region.
 				break;
 
 
 			case 'load': // track LOAD settings atom
-				$atom_structure['preload_start_time'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 4));
-				$atom_structure['preload_duration']   = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
-				$atom_structure['preload_flags_raw']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  8, 4));
-				$atom_structure['default_hints_raw']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 12, 4));
+				$atom_structure['preload_start_time'] = Helper::BigEndian2Int(substr($atom_data,  0, 4));
+				$atom_structure['preload_duration']   = Helper::BigEndian2Int(substr($atom_data,  4, 4));
+				$atom_structure['preload_flags_raw']  = Helper::BigEndian2Int(substr($atom_data,  8, 4));
+				$atom_structure['default_hints_raw']  = Helper::BigEndian2Int(substr($atom_data, 12, 4));
 
 				$atom_structure['default_hints']['double_buffer'] = (bool) ($atom_structure['default_hints_raw'] & 0x0020);
 				$atom_structure['default_hints']['high_quality']  = (bool) ($atom_structure['default_hints_raw'] & 0x0100);
@@ -1060,76 +1068,76 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 			case 'scpt': // tranSCriPT atom
 			case 'ssrc': // non-primary SouRCe atom
 				for ($i = 0; $i < (strlen($atom_data) % 4); $i++) {
-					$atom_structure['track_id'][$i] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $i * 4, 4));
+					$atom_structure['track_id'][$i] = Helper::BigEndian2Int(substr($atom_data, $i * 4, 4));
 				}
 				break;
 
 
 			case 'elst': // Edit LiST atom
-				$atom_structure['version']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']      = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
-				$atom_structure['number_entries'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
+				$atom_structure['version']        = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']      = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['number_entries'] = Helper::BigEndian2Int(substr($atom_data,  4, 4));
 				for ($i = 0; $i < $atom_structure['number_entries']; $i++ ) {
-					$atom_structure['edit_list'][$i]['track_duration'] =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 8 + ($i * 12) + 0, 4));
-					$atom_structure['edit_list'][$i]['media_time']     =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 8 + ($i * 12) + 4, 4));
-					$atom_structure['edit_list'][$i]['media_rate']     = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 8 + ($i * 12) + 8, 4));
+					$atom_structure['edit_list'][$i]['track_duration'] =   Helper::BigEndian2Int(substr($atom_data, 8 + ($i * 12) + 0, 4));
+					$atom_structure['edit_list'][$i]['media_time']     =   Helper::BigEndian2Int(substr($atom_data, 8 + ($i * 12) + 4, 4));
+					$atom_structure['edit_list'][$i]['media_rate']     = Helper::FixedPoint16_16(substr($atom_data, 8 + ($i * 12) + 8, 4));
 				}
 				break;
 
 
 			case 'kmat': // compressed MATte atom
-				$atom_structure['version']        = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']      = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
+				$atom_structure['version']        = Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']      = Helper::BigEndian2Int(substr($atom_data,  1, 3)); // hardcoded: 0x0000
 				$atom_structure['matte_data_raw'] =               substr($atom_data,  4);
 				break;
 
 
 			case 'ctab': // Color TABle atom
-				$atom_structure['color_table_seed']   = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 4)); // hardcoded: 0x00000000
-				$atom_structure['color_table_flags']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 2)); // hardcoded: 0x8000
-				$atom_structure['color_table_size']   = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  6, 2)) + 1;
+				$atom_structure['color_table_seed']   = Helper::BigEndian2Int(substr($atom_data,  0, 4)); // hardcoded: 0x00000000
+				$atom_structure['color_table_flags']  = Helper::BigEndian2Int(substr($atom_data,  4, 2)); // hardcoded: 0x8000
+				$atom_structure['color_table_size']   = Helper::BigEndian2Int(substr($atom_data,  6, 2)) + 1;
 				for ($colortableentry = 0; $colortableentry < $atom_structure['color_table_size']; $colortableentry++) {
-					$atom_structure['color_table'][$colortableentry]['alpha'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 8 + ($colortableentry * 8) + 0, 2));
-					$atom_structure['color_table'][$colortableentry]['red']   = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 8 + ($colortableentry * 8) + 2, 2));
-					$atom_structure['color_table'][$colortableentry]['green'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 8 + ($colortableentry * 8) + 4, 2));
-					$atom_structure['color_table'][$colortableentry]['blue']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 8 + ($colortableentry * 8) + 6, 2));
+					$atom_structure['color_table'][$colortableentry]['alpha'] = Helper::BigEndian2Int(substr($atom_data, 8 + ($colortableentry * 8) + 0, 2));
+					$atom_structure['color_table'][$colortableentry]['red']   = Helper::BigEndian2Int(substr($atom_data, 8 + ($colortableentry * 8) + 2, 2));
+					$atom_structure['color_table'][$colortableentry]['green'] = Helper::BigEndian2Int(substr($atom_data, 8 + ($colortableentry * 8) + 4, 2));
+					$atom_structure['color_table'][$colortableentry]['blue']  = Helper::BigEndian2Int(substr($atom_data, 8 + ($colortableentry * 8) + 6, 2));
 				}
 				break;
 
 
 			case 'mvhd': // MoVie HeaDer atom
-				$atom_structure['version']            =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']          =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3));
-				$atom_structure['creation_time']      =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
-				$atom_structure['modify_time']        =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  8, 4));
-				$atom_structure['time_scale']         =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 12, 4));
-				$atom_structure['duration']           =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 16, 4));
-				$atom_structure['preferred_rate']     = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 20, 4));
-				$atom_structure['preferred_volume']   =   GetId3_Lib_Helper::FixedPoint8_8(substr($atom_data, 24, 2));
+				$atom_structure['version']            =   Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']          =   Helper::BigEndian2Int(substr($atom_data,  1, 3));
+				$atom_structure['creation_time']      =   Helper::BigEndian2Int(substr($atom_data,  4, 4));
+				$atom_structure['modify_time']        =   Helper::BigEndian2Int(substr($atom_data,  8, 4));
+				$atom_structure['time_scale']         =   Helper::BigEndian2Int(substr($atom_data, 12, 4));
+				$atom_structure['duration']           =   Helper::BigEndian2Int(substr($atom_data, 16, 4));
+				$atom_structure['preferred_rate']     = Helper::FixedPoint16_16(substr($atom_data, 20, 4));
+				$atom_structure['preferred_volume']   =   Helper::FixedPoint8_8(substr($atom_data, 24, 2));
 				$atom_structure['reserved']           =                             substr($atom_data, 26, 10);
-				$atom_structure['matrix_a']           = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 36, 4));
-				$atom_structure['matrix_b']           = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 40, 4));
-				$atom_structure['matrix_u']           =  GetId3_Lib_Helper::FixedPoint2_30(substr($atom_data, 44, 4));
-				$atom_structure['matrix_c']           = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 48, 4));
-				$atom_structure['matrix_d']           = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 52, 4));
-				$atom_structure['matrix_v']           =  GetId3_Lib_Helper::FixedPoint2_30(substr($atom_data, 56, 4));
-				$atom_structure['matrix_x']           = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 60, 4));
-				$atom_structure['matrix_y']           = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 64, 4));
-				$atom_structure['matrix_w']           =  GetId3_Lib_Helper::FixedPoint2_30(substr($atom_data, 68, 4));
-				$atom_structure['preview_time']       =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 72, 4));
-				$atom_structure['preview_duration']   =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 76, 4));
-				$atom_structure['poster_time']        =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 80, 4));
-				$atom_structure['selection_time']     =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 84, 4));
-				$atom_structure['selection_duration'] =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 88, 4));
-				$atom_structure['current_time']       =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 92, 4));
-				$atom_structure['next_track_id']      =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 96, 4));
+				$atom_structure['matrix_a']           = Helper::FixedPoint16_16(substr($atom_data, 36, 4));
+				$atom_structure['matrix_b']           = Helper::FixedPoint16_16(substr($atom_data, 40, 4));
+				$atom_structure['matrix_u']           =  Helper::FixedPoint2_30(substr($atom_data, 44, 4));
+				$atom_structure['matrix_c']           = Helper::FixedPoint16_16(substr($atom_data, 48, 4));
+				$atom_structure['matrix_d']           = Helper::FixedPoint16_16(substr($atom_data, 52, 4));
+				$atom_structure['matrix_v']           =  Helper::FixedPoint2_30(substr($atom_data, 56, 4));
+				$atom_structure['matrix_x']           = Helper::FixedPoint16_16(substr($atom_data, 60, 4));
+				$atom_structure['matrix_y']           = Helper::FixedPoint16_16(substr($atom_data, 64, 4));
+				$atom_structure['matrix_w']           =  Helper::FixedPoint2_30(substr($atom_data, 68, 4));
+				$atom_structure['preview_time']       =   Helper::BigEndian2Int(substr($atom_data, 72, 4));
+				$atom_structure['preview_duration']   =   Helper::BigEndian2Int(substr($atom_data, 76, 4));
+				$atom_structure['poster_time']        =   Helper::BigEndian2Int(substr($atom_data, 80, 4));
+				$atom_structure['selection_time']     =   Helper::BigEndian2Int(substr($atom_data, 84, 4));
+				$atom_structure['selection_duration'] =   Helper::BigEndian2Int(substr($atom_data, 88, 4));
+				$atom_structure['current_time']       =   Helper::BigEndian2Int(substr($atom_data, 92, 4));
+				$atom_structure['next_track_id']      =   Helper::BigEndian2Int(substr($atom_data, 96, 4));
 
 				if ($atom_structure['time_scale'] == 0) {
 					$info['error'][] = 'Corrupt Quicktime file: mvhd.time_scale == zero';
 					return false;
 				}
-				$atom_structure['creation_time_unix']        = GetId3_Lib_Helper::DateMac2Unix($atom_structure['creation_time']);
-				$atom_structure['modify_time_unix']          = GetId3_Lib_Helper::DateMac2Unix($atom_structure['modify_time']);
+				$atom_structure['creation_time_unix']        = Helper::DateMac2Unix($atom_structure['creation_time']);
+				$atom_structure['modify_time_unix']          = Helper::DateMac2Unix($atom_structure['modify_time']);
 				$info['quicktime']['time_scale']    = (isset($info['quicktime']['time_scale']) ? max($info['quicktime']['time_scale'], $atom_structure['time_scale']) : $atom_structure['time_scale']);
 				$info['quicktime']['display_scale'] = $atom_structure['matrix_a'];
 				$info['playtime_seconds']           = $atom_structure['duration'] / $atom_structure['time_scale'];
@@ -1137,36 +1145,36 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 
 			case 'tkhd': // TracK HeaDer atom
-				$atom_structure['version']             =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 1));
-				$atom_structure['flags_raw']           =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  1, 3));
-				$atom_structure['creation_time']       =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
-				$atom_structure['modify_time']         =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  8, 4));
-				$atom_structure['trackid']             =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 12, 4));
-				$atom_structure['reserved1']           =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 16, 4));
-				$atom_structure['duration']            =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 20, 4));
-				$atom_structure['reserved2']           =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 24, 8));
-				$atom_structure['layer']               =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 32, 2));
-				$atom_structure['alternate_group']     =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 34, 2));
-				$atom_structure['volume']              =   GetId3_Lib_Helper::FixedPoint8_8(substr($atom_data, 36, 2));
-				$atom_structure['reserved3']           =   GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 38, 2));
-				$atom_structure['matrix_a']            = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 40, 4));
-				$atom_structure['matrix_b']            = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 44, 4));
-				$atom_structure['matrix_u']            = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 48, 4));
-				$atom_structure['matrix_c']            = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 52, 4));
-				$atom_structure['matrix_d']            = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 56, 4));
-				$atom_structure['matrix_v']            = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 60, 4));
-				$atom_structure['matrix_x']            =  GetId3_Lib_Helper::FixedPoint2_30(substr($atom_data, 64, 4));
-				$atom_structure['matrix_y']            =  GetId3_Lib_Helper::FixedPoint2_30(substr($atom_data, 68, 4));
-				$atom_structure['matrix_w']            =  GetId3_Lib_Helper::FixedPoint2_30(substr($atom_data, 72, 4));
-				$atom_structure['width']               = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 76, 4));
-				$atom_structure['height']              = GetId3_Lib_Helper::FixedPoint16_16(substr($atom_data, 80, 4));
+				$atom_structure['version']             =   Helper::BigEndian2Int(substr($atom_data,  0, 1));
+				$atom_structure['flags_raw']           =   Helper::BigEndian2Int(substr($atom_data,  1, 3));
+				$atom_structure['creation_time']       =   Helper::BigEndian2Int(substr($atom_data,  4, 4));
+				$atom_structure['modify_time']         =   Helper::BigEndian2Int(substr($atom_data,  8, 4));
+				$atom_structure['trackid']             =   Helper::BigEndian2Int(substr($atom_data, 12, 4));
+				$atom_structure['reserved1']           =   Helper::BigEndian2Int(substr($atom_data, 16, 4));
+				$atom_structure['duration']            =   Helper::BigEndian2Int(substr($atom_data, 20, 4));
+				$atom_structure['reserved2']           =   Helper::BigEndian2Int(substr($atom_data, 24, 8));
+				$atom_structure['layer']               =   Helper::BigEndian2Int(substr($atom_data, 32, 2));
+				$atom_structure['alternate_group']     =   Helper::BigEndian2Int(substr($atom_data, 34, 2));
+				$atom_structure['volume']              =   Helper::FixedPoint8_8(substr($atom_data, 36, 2));
+				$atom_structure['reserved3']           =   Helper::BigEndian2Int(substr($atom_data, 38, 2));
+				$atom_structure['matrix_a']            = Helper::FixedPoint16_16(substr($atom_data, 40, 4));
+				$atom_structure['matrix_b']            = Helper::FixedPoint16_16(substr($atom_data, 44, 4));
+				$atom_structure['matrix_u']            = Helper::FixedPoint16_16(substr($atom_data, 48, 4));
+				$atom_structure['matrix_c']            = Helper::FixedPoint16_16(substr($atom_data, 52, 4));
+				$atom_structure['matrix_d']            = Helper::FixedPoint16_16(substr($atom_data, 56, 4));
+				$atom_structure['matrix_v']            = Helper::FixedPoint16_16(substr($atom_data, 60, 4));
+				$atom_structure['matrix_x']            =  Helper::FixedPoint2_30(substr($atom_data, 64, 4));
+				$atom_structure['matrix_y']            =  Helper::FixedPoint2_30(substr($atom_data, 68, 4));
+				$atom_structure['matrix_w']            =  Helper::FixedPoint2_30(substr($atom_data, 72, 4));
+				$atom_structure['width']               = Helper::FixedPoint16_16(substr($atom_data, 76, 4));
+				$atom_structure['height']              = Helper::FixedPoint16_16(substr($atom_data, 80, 4));
 
 				$atom_structure['flags']['enabled']    = (bool) ($atom_structure['flags_raw'] & 0x0001);
 				$atom_structure['flags']['in_movie']   = (bool) ($atom_structure['flags_raw'] & 0x0002);
 				$atom_structure['flags']['in_preview'] = (bool) ($atom_structure['flags_raw'] & 0x0004);
 				$atom_structure['flags']['in_poster']  = (bool) ($atom_structure['flags_raw'] & 0x0008);
-				$atom_structure['creation_time_unix']  = GetId3_Lib_Helper::DateMac2Unix($atom_structure['creation_time']);
-				$atom_structure['modify_time_unix']    = GetId3_Lib_Helper::DateMac2Unix($atom_structure['modify_time']);
+				$atom_structure['creation_time_unix']  = Helper::DateMac2Unix($atom_structure['creation_time']);
+				$atom_structure['modify_time_unix']    = Helper::DateMac2Unix($atom_structure['modify_time']);
 
 				if ($atom_structure['flags']['enabled'] == 1) {
 					if (!isset($info['video']['resolution_x']) || !isset($info['video']['resolution_y'])) {
@@ -1189,34 +1197,34 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 				// http://www.koders.com/c/fid1FAB3E762903DC482D8A246D4A4BF9F28E049594.aspx?s=windows.h
 				// http://libquicktime.sourcearchive.com/documentation/1.0.2plus-pdebian/iods_8c-source.html
 				$offset = 0;
-				$atom_structure['version']                =       GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 1));
+				$atom_structure['version']                =       Helper::BigEndian2Int(substr($atom_data, $offset, 1));
 				$offset += 1;
-				$atom_structure['flags_raw']              =       GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 3));
+				$atom_structure['flags_raw']              =       Helper::BigEndian2Int(substr($atom_data, $offset, 3));
 				$offset += 3;
-				$atom_structure['mp4_iod_tag']            =       GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 1));
+				$atom_structure['mp4_iod_tag']            =       Helper::BigEndian2Int(substr($atom_data, $offset, 1));
 				$offset += 1;
 				$atom_structure['length']                 = $this->quicktime_read_mp4_descr_length($atom_data, $offset);
 				//$offset already adjusted by quicktime_read_mp4_descr_length()
-				$atom_structure['object_descriptor_id']   =       GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 2));
+				$atom_structure['object_descriptor_id']   =       Helper::BigEndian2Int(substr($atom_data, $offset, 2));
 				$offset += 2;
-				$atom_structure['od_profile_level']       =       GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 1));
+				$atom_structure['od_profile_level']       =       Helper::BigEndian2Int(substr($atom_data, $offset, 1));
 				$offset += 1;
-				$atom_structure['scene_profile_level']    =       GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 1));
+				$atom_structure['scene_profile_level']    =       Helper::BigEndian2Int(substr($atom_data, $offset, 1));
 				$offset += 1;
-				$atom_structure['audio_profile_id']       =       GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 1));
+				$atom_structure['audio_profile_id']       =       Helper::BigEndian2Int(substr($atom_data, $offset, 1));
 				$offset += 1;
-				$atom_structure['video_profile_id']       =       GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 1));
+				$atom_structure['video_profile_id']       =       Helper::BigEndian2Int(substr($atom_data, $offset, 1));
 				$offset += 1;
-				$atom_structure['graphics_profile_level'] =       GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 1));
+				$atom_structure['graphics_profile_level'] =       Helper::BigEndian2Int(substr($atom_data, $offset, 1));
 				$offset += 1;
 
 				$atom_structure['num_iods_tracks'] = ($atom_structure['length'] - 7) / 6; // 6 bytes would only be right if all tracks use 1-byte length fields
 				for ($i = 0; $i < $atom_structure['num_iods_tracks']; $i++) {
-					$atom_structure['track'][$i]['ES_ID_IncTag'] =       GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 1));
+					$atom_structure['track'][$i]['ES_ID_IncTag'] =       Helper::BigEndian2Int(substr($atom_data, $offset, 1));
 					$offset += 1;
 					$atom_structure['track'][$i]['length']       = $this->quicktime_read_mp4_descr_length($atom_data, $offset);
 					//$offset already adjusted by quicktime_read_mp4_descr_length()
-					$atom_structure['track'][$i]['track_id']     =       GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 4));
+					$atom_structure['track'][$i]['track_id']     =       Helper::BigEndian2Int(substr($atom_data, $offset, 4));
 					$offset += 4;
 				}
 
@@ -1226,7 +1234,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 			case 'ftyp': // FileTYPe (?) atom (for MP4 it seems)
 				$atom_structure['signature'] =                           substr($atom_data,  0, 4);
-				$atom_structure['unknown_1'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  4, 4));
+				$atom_structure['unknown_1'] = Helper::BigEndian2Int(substr($atom_data,  4, 4));
 				$atom_structure['fourcc']    =                           substr($atom_data,  8, 4);
 				break;
 
@@ -1249,7 +1257,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 			case 'nsav': // NoSAVe atom
 				// http://developer.apple.com/technotes/tn/tn2038.html
-				$atom_structure['data'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 4));
+				$atom_structure['data'] = Helper::BigEndian2Int(substr($atom_data,  0, 4));
 				break;
 
 			case 'ctyp': // Controller TYPe atom (seen on QTVR)
@@ -1267,7 +1275,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 				break;
 
 			case 'pano': // PANOrama track (seen on QTVR)
-				$atom_structure['pano'] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data,  0, 4));
+				$atom_structure['pano'] = Helper::BigEndian2Int(substr($atom_data,  0, 4));
 				break;
 
 			case 'hint': // HINT track
@@ -1279,7 +1287,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 
 			case 'imgt': // IMaGe Track reference (kQTVRImageTrackRefType) (seen on QTVR)
 				for ($i = 0; $i < ($atom_structure['size'] - 8); $i += 4) {
-					$atom_structure['imgt'][] = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $i, 4));
+					$atom_structure['imgt'][] = Helper::BigEndian2Int(substr($atom_data, $i, 4));
 				}
 				break;
 
@@ -1310,7 +1318,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 						$info['quicktime']['comments']['gps_altitude'][] = floatval($altitude);
 					}
 				} else {
-					$info['warning'][] = 'QuickTime atom "©xyz" data does not match expected data pattern at offset '.$baseoffset.'. Please report as GetId3() bug.';
+					$info['warning'][] = 'QuickTime atom "©xyz" data does not match expected data pattern at offset '.$baseoffset.'. Please report as GetId3Core() bug.';
 				}
 				break;
 
@@ -1348,8 +1356,8 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 				// mdta keys  mdtacom.apple.quicktime.make (mdtacom.apple.quicktime.creationdate ,mdtacom.apple.quicktime.location.ISO6709 $mdtacom.apple.quicktime.software !mdtacom.apple.quicktime.model ilst   data DEApple 0  (data DE2011-05-11T17:54:04+0200 2  *data DE+52.4936+013.3897+040.247/   data DE4.3.1  data DEiPhone 4
 				// http://www.geocities.com/xhelmboyx/quicktime/formats/qti-layout.txt
 
-	            $atom_structure['version']   =          GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 0, 1));
-	            $atom_structure['flags_raw'] =          GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 1, 3));
+	            $atom_structure['version']   =          Helper::BigEndian2Int(substr($atom_data, 0, 1));
+	            $atom_structure['flags_raw'] =          Helper::BigEndian2Int(substr($atom_data, 1, 3));
 	            $atom_structure['subatoms']  = $this->QuicktimeParseContainerAtom(substr($atom_data, 4), $baseoffset + 8, $atomHierarchy, $ParseAllPossibleAtoms);
 				//$atom_structure['subatoms']  = $this->QuicktimeParseContainerAtom($atom_data, $baseoffset + 8, $atomHierarchy, $ParseAllPossibleAtoms);
 				break;
@@ -1357,12 +1365,12 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 			case 'data': // metaDATA atom
 				// seems to be 2 bytes language code (ASCII), 2 bytes unknown (set to 0x10B5 in sample I have), remainder is useful data
 				$atom_structure['language'] =                           substr($atom_data, 4 + 0, 2);
-				$atom_structure['unknown']  = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, 4 + 2, 2));
+				$atom_structure['unknown']  = Helper::BigEndian2Int(substr($atom_data, 4 + 2, 2));
 				$atom_structure['data']     =                           substr($atom_data, 4 + 4);
 				break;
 
 			default:
-				$info['warning'][] = 'Unknown QuickTime atom type: "'.$atomname.'" ('.trim(GetId3_Lib_Helper::PrintHexBytes($atomname)).') at offset '.$baseoffset;
+				$info['warning'][] = 'Unknown QuickTime atom type: "'.$atomname.'" ('.trim(Helper::PrintHexBytes($atomname)).') at offset '.$baseoffset;
 				$atom_structure['data'] = $atom_data;
 				break;
 		}
@@ -1383,11 +1391,11 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 		$atom_structure  = false;
 		$subatomoffset  = 0;
 		$subatomcounter = 0;
-		if ((strlen($atom_data) == 4) && (GetId3_Lib_Helper::BigEndian2Int($atom_data) == 0x00000000)) {
+		if ((strlen($atom_data) == 4) && (Helper::BigEndian2Int($atom_data) == 0x00000000)) {
 			return false;
 		}
 		while ($subatomoffset < strlen($atom_data)) {
-			$subatomsize = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $subatomoffset + 0, 4));
+			$subatomsize = Helper::BigEndian2Int(substr($atom_data, $subatomoffset + 0, 4));
 			$subatomname =                           substr($atom_data, $subatomoffset + 4, 4);
 			$subatomdata =                           substr($atom_data, $subatomoffset + 8, $subatomsize - 8);
 			if ($subatomsize == 0) {
@@ -1982,12 +1990,12 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 		$parsed = array();
 		while ($offset < $datalength) {
 //echo GetId3_lib::PrintHexBytes(substr($atom_data, $offset, 4)).'<br>';
-			$record_type       = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 4));  $offset += 4;
-			$data_size_type    = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 2));  $offset += 2;
-			$data_size         = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, 2));  $offset += 2;
+			$record_type       = Helper::BigEndian2Int(substr($atom_data, $offset, 4));  $offset += 4;
+			$data_size_type    = Helper::BigEndian2Int(substr($atom_data, $offset, 2));  $offset += 2;
+			$data_size         = Helper::BigEndian2Int(substr($atom_data, $offset, 2));  $offset += 2;
 			switch ($data_size_type) {
 				case 0x0001: // 0x0001 = flag   (size field *= 1-byte)
-					$data = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset, $data_size * 1));
+					$data = Helper::BigEndian2Int(substr($atom_data, $offset, $data_size * 1));
 					$offset += ($data_size * 1);
 					break;
 				case 0x0002: // 0x0002 = char   (size field *= 1-byte)
@@ -2000,7 +2008,7 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 					for ($i = $data_size - 1; $i >= 0; $i--) {
 						$data .= substr($atom_data, $offset + ($i * 2), 2);
 					}
-					$data = GetId3_Lib_Helper::BigEndian2Int($data);
+					$data = Helper::BigEndian2Int($data);
 					$offset += ($data_size * 2);
 					break;
 				case 0x0004: // 0x0004 = QWORD+ (size field *= 4-byte), values are stored EFGHABCD
@@ -2008,14 +2016,14 @@ class GetId3_Module_AudioVideo_Quicktime extends GetId3_Handler_BaseHandler
 					for ($i = $data_size - 1; $i >= 0; $i--) {
 						$data .= substr($atom_data, $offset + ($i * 4), 4);
 					}
-					$data = GetId3_Lib_Helper::BigEndian2Int($data);
+					$data = Helper::BigEndian2Int($data);
 					$offset += ($data_size * 4);
 					break;
 				case 0x0005: // 0x0005 = float  (size field *= 8-byte), values are stored aaaabbbb where value is aaaa/bbbb; possibly multiple sets of values appended together
 					$data = array();
 					for ($i = 0; $i < $data_size; $i++) {
-						$numerator    = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset + ($i * 8) + 0, 4));
-						$denomninator = GetId3_Lib_Helper::BigEndian2Int(substr($atom_data, $offset + ($i * 8) + 4, 4));
+						$numerator    = Helper::BigEndian2Int(substr($atom_data, $offset + ($i * 8) + 0, 4));
+						$denomninator = Helper::BigEndian2Int(substr($atom_data, $offset + ($i * 8) + 4, 4));
 						if ($denomninator == 0) {
 							$data[$i] = false;
 						} else {
@@ -2079,14 +2087,14 @@ echo 'QuicktimeParseNikonNCTG()::unknown $data_size_type: '.$data_size_type.'<br
 				case 0x02000024: // WorldTime
 					// http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/Nikon.html#WorldTime
 					// timezone is stored as offset from GMT in minutes
-					$timezone = GetId3_Lib_Helper::BigEndian2Int(substr($data, 0, 2));
+					$timezone = Helper::BigEndian2Int(substr($data, 0, 2));
 					if ($timezone & 0x8000) {
 						$timezone = 0 - (0x10000 - $timezone);
 					}
 					$timezone /= 60;
 
-					$dst = (bool) GetId3_Lib_Helper::BigEndian2Int(substr($data, 2, 1));
-					switch (GetId3_Lib_Helper::BigEndian2Int(substr($data, 3, 1))) {
+					$dst = (bool) Helper::BigEndian2Int(substr($data, 2, 1));
+					switch (Helper::BigEndian2Int(substr($data, 3, 1))) {
 						case 2:
 							$datedisplayformat = 'D/M/Y'; break;
 						case 1:

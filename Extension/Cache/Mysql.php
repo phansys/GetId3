@@ -1,4 +1,9 @@
 <?php
+
+namespace GetId3\Extension\Cache;
+
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -77,7 +82,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Extension_Cache_Mysql extends GetId3_GetId3
+class Mysql extends GetId3
 {
     /**
      *
@@ -127,10 +132,10 @@ class GetId3_Extension_Cache_Mysql extends GetId3_GetId3
 
 		// Check version number and clear cache if changed
 		$version = '';
-		if ($this->cursor = mysql_query("SELECT `value` FROM `".mysql_real_escape_string($this->table)."` WHERE (`filename` = '".mysql_real_escape_string(GetId3_GetId3::VERSION)."') AND (`filesize` = '-1') AND (`filetime` = '-1') AND (`analyzetime` = '-1')", $this->connection)) {
+		if ($this->cursor = mysql_query("SELECT `value` FROM `".mysql_real_escape_string($this->table)."` WHERE (`filename` = '".mysql_real_escape_string(GetId3Core::VERSION)."') AND (`filesize` = '-1') AND (`filetime` = '-1') AND (`analyzetime` = '-1')", $this->connection)) {
 			list($version) = mysql_fetch_array($this->cursor);
 		}
-		if ($version != GetId3_GetId3::VERSION) {
+		if ($version != GetId3Core::VERSION) {
 			$this->clear_cache();
 		}
 
@@ -145,7 +150,7 @@ class GetId3_Extension_Cache_Mysql extends GetId3_GetId3
 	public function clear_cache() {
 
 		$this->cursor = mysql_query("DELETE FROM `".mysql_real_escape_string($this->table)."`", $this->connection);
-		$this->cursor = mysql_query("INSERT INTO `".mysql_real_escape_string($this->table)."` VALUES ('".GetId3_GetId3::VERSION."', -1, -1, -1, '".GetId3_GetId3::VERSION."')", $this->connection);
+		$this->cursor = mysql_query("INSERT INTO `".mysql_real_escape_string($this->table)."` VALUES ('".GetId3Core::VERSION."', -1, -1, -1, '".GetId3Core::VERSION."')", $this->connection);
 	}
 
 

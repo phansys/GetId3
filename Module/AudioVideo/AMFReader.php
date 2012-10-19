@@ -1,5 +1,8 @@
 <?php
 
+namespace GetId3\Module\AudioVideo;
+
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -22,7 +25,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_AudioVideo_AMFReader
+class AMFReader
 {
     public $stream;
 

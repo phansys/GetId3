@@ -1,4 +1,9 @@
 <?php
+
+namespace GetId3\Module\Misc;
+
+use GetId3\Handler\BaseHandler;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +25,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Misc_Par2 extends GetId3_Handler_BaseHandler
+class Par2 extends BaseHandler
 {
 
     /**
@@ -32,7 +37,7 @@ class GetId3_Module_Misc_Par2 extends GetId3_Handler_BaseHandler
 
 		$info['fileformat'] = 'par2';
 
-		$info['error'][] = 'PAR2 parsing not enabled in this version of GetId3()';
+		$info['error'][] = 'PAR2 parsing not enabled in this version of GetId3Core()';
 		return false;
 
 	}

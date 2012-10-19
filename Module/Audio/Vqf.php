@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Vqf extends GetId3_Handler_BaseHandler
+class Vqf extends BaseHandler
 {
     /**
      *
@@ -49,7 +55,7 @@ class GetId3_Module_Audio_Vqf extends GetId3_Handler_BaseHandler
 		$thisfile_vqf_raw['header_tag'] = substr($VQFheaderData, $offset, 4);
 		$magic = 'TWIN';
 		if ($thisfile_vqf_raw['header_tag'] != $magic) {
-			$info['error'][] = 'Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes($thisfile_vqf_raw['header_tag']).'"';
+			$info['error'][] = 'Expecting "'.Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes($thisfile_vqf_raw['header_tag']).'"';
 			unset($info['vqf']);
 			unset($info['fileformat']);
 			return false;
@@ -57,7 +63,7 @@ class GetId3_Module_Audio_Vqf extends GetId3_Handler_BaseHandler
 		$offset += 4;
 		$thisfile_vqf_raw['version'] =                           substr($VQFheaderData, $offset, 8);
 		$offset += 8;
-		$thisfile_vqf_raw['size']    = GetId3_Lib_Helper::BigEndian2Int(substr($VQFheaderData, $offset, 4));
+		$thisfile_vqf_raw['size']    = Helper::BigEndian2Int(substr($VQFheaderData, $offset, 4));
 		$offset += 4;
 
 		while (ftell($this->getid3->fp) < $info['avdataend']) {
@@ -71,7 +77,7 @@ class GetId3_Module_Audio_Vqf extends GetId3_Handler_BaseHandler
 				break;
 			}
 			$chunkoffset += 4;
-			$ChunkSize = GetId3_Lib_Helper::BigEndian2Int(substr($ChunkData, $chunkoffset, 4));
+			$ChunkSize = Helper::BigEndian2Int(substr($ChunkData, $chunkoffset, 4));
 			$chunkoffset += 4;
 			if ($ChunkSize > ($info['avdataend'] - ftell($this->getid3->fp))) {
 				$info['error'][] = 'Invalid chunk size ('.$ChunkSize.') for chunk "'.$ChunkName.'" at offset '.$ChunkBaseOffset;
@@ -87,13 +93,13 @@ class GetId3_Module_Audio_Vqf extends GetId3_Handler_BaseHandler
 					$thisfile_vqf['COMM'] = array();
 					$thisfile_vqf_COMM    = &$thisfile_vqf['COMM'];
 
-					$thisfile_vqf_COMM['channel_mode']   = GetId3_Lib_Helper::BigEndian2Int(substr($ChunkData, $chunkoffset, 4));
+					$thisfile_vqf_COMM['channel_mode']   = Helper::BigEndian2Int(substr($ChunkData, $chunkoffset, 4));
 					$chunkoffset += 4;
-					$thisfile_vqf_COMM['bitrate']        = GetId3_Lib_Helper::BigEndian2Int(substr($ChunkData, $chunkoffset, 4));
+					$thisfile_vqf_COMM['bitrate']        = Helper::BigEndian2Int(substr($ChunkData, $chunkoffset, 4));
 					$chunkoffset += 4;
-					$thisfile_vqf_COMM['sample_rate']    = GetId3_Lib_Helper::BigEndian2Int(substr($ChunkData, $chunkoffset, 4));
+					$thisfile_vqf_COMM['sample_rate']    = Helper::BigEndian2Int(substr($ChunkData, $chunkoffset, 4));
 					$chunkoffset += 4;
-					$thisfile_vqf_COMM['security_level'] = GetId3_Lib_Helper::BigEndian2Int(substr($ChunkData, $chunkoffset, 4));
+					$thisfile_vqf_COMM['security_level'] = Helper::BigEndian2Int(substr($ChunkData, $chunkoffset, 4));
 					$chunkoffset += 4;
 
 					$info['audio']['channels']        = $thisfile_vqf_COMM['channel_mode'] + 1;
@@ -117,7 +123,7 @@ class GetId3_Module_Audio_Vqf extends GetId3_Handler_BaseHandler
 					break;
 
 				case 'DSIZ':
-					$thisfile_vqf['DSIZ'] = GetId3_Lib_Helper::BigEndian2Int(substr($ChunkData, 8, 4));
+					$thisfile_vqf['DSIZ'] = Helper::BigEndian2Int(substr($ChunkData, 8, 4));
 					break;
 
 				default:

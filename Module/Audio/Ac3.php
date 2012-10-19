@@ -1,4 +1,10 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Ac3 extends GetId3_Handler_BaseHandler
+class Ac3 extends BaseHandler
 {
     /**
      *
@@ -82,7 +88,7 @@ class GetId3_Module_Audio_Ac3 extends GetId3_Handler_BaseHandler
 		else {
 			if (!$this->isDependencyFor('matroska')) {
 				unset($info['fileformat'], $info['ac3']);
-				return $this->error('Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes(substr($this->AC3header['syncinfo'], 0, 2)).'"');
+				return $this->error('Expecting "'.Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes(substr($this->AC3header['syncinfo'], 0, 2)).'"');
 			}
 			$offset = 0;
 			$this->fseek(-2, SEEK_CUR);
@@ -92,8 +98,8 @@ class GetId3_Module_Audio_Ac3 extends GetId3_Handler_BaseHandler
 		$info['audio']['bitrate_mode'] = 'cbr';
 		$info['audio']['lossless']     = false;
 
-		$thisfile_ac3_raw['synchinfo']['crc1']       = GetId3_Lib_Helper::LittleEndian2Int(substr($this->AC3header['syncinfo'], $offset, 2));
-		$ac3_synchinfo_fscod_frmsizecod              = GetId3_Lib_Helper::LittleEndian2Int(substr($this->AC3header['syncinfo'], ($offset + 2), 1));
+		$thisfile_ac3_raw['synchinfo']['crc1']       = Helper::LittleEndian2Int(substr($this->AC3header['syncinfo'], $offset, 2));
+		$ac3_synchinfo_fscod_frmsizecod              = Helper::LittleEndian2Int(substr($this->AC3header['syncinfo'], ($offset + 2), 1));
 		$thisfile_ac3_raw['synchinfo']['fscod']      = ($ac3_synchinfo_fscod_frmsizecod & 0xC0) >> 6;
 		$thisfile_ac3_raw['synchinfo']['frmsizecod'] = ($ac3_synchinfo_fscod_frmsizecod & 0x3F);
 
@@ -106,7 +112,7 @@ class GetId3_Module_Audio_Ac3 extends GetId3_Handler_BaseHandler
 		$thisfile_ac3['bitrate']      = self::bitrateLookup($thisfile_ac3_raw['synchinfo']['frmsizecod']);
 		$info['audio']['bitrate'] = $thisfile_ac3['bitrate'];
 
-		$this->AC3header['bsi'] = GetId3_Lib_Helper::BigEndian2Bin($this->fread(15));
+		$this->AC3header['bsi'] = Helper::BigEndian2Bin($this->fread(15));
 		$ac3_bsi_offset = 0;
 
 		$thisfile_ac3_raw_bsi['bsid'] = $this->readHeaderBSI(5);
@@ -114,7 +120,7 @@ class GetId3_Module_Audio_Ac3 extends GetId3_Handler_BaseHandler
 			// Decoders which can decode version 8 will thus be able to decode version numbers less than 8.
 			// If this standard is extended by the addition of additional elements or features, a value of bsid greater than 8 will be used.
 			// Decoders built to this version of the standard will not be able to decode versions with bsid greater than 8.
-			$this->error('Bit stream identification is version '.$thisfile_ac3_raw_bsi['bsid'].', but GetId3() only understands up to version 8');
+			$this->error('Bit stream identification is version '.$thisfile_ac3_raw_bsi['bsid'].', but GetId3Core() only understands up to version 8');
 		    unset($info['ac3']);
 			return false;
 		}
@@ -244,7 +250,7 @@ class GetId3_Module_Audio_Ac3 extends GetId3_Handler_BaseHandler
 		if ($thisfile_ac3_raw_bsi['addbsi_flag']) {
 			$thisfile_ac3_raw_bsi['addbsi_length'] = $this->readHeaderBSI(6);
 
-			$this->AC3header['bsi'] .= GetId3_Lib_Helper::BigEndian2Bin($this->fread($thisfile_ac3_raw_bsi['addbsi_length']));
+			$this->AC3header['bsi'] .= Helper::BigEndian2Bin($this->fread($thisfile_ac3_raw_bsi['addbsi_length']));
 
 			$thisfile_ac3_raw_bsi['addbsi_data'] = substr($this->AC3header['bsi'], $this->BSIoffset, $thisfile_ac3_raw_bsi['addbsi_length'] * 8);
 			$this->BSIoffset += $thisfile_ac3_raw_bsi['addbsi_length'] * 8;
@@ -457,7 +463,7 @@ class GetId3_Module_Audio_Ac3 extends GetId3_Handler_BaseHandler
 		} else {
 			$log_gain = bindec(substr($fourbit, 1));
 		}
-		$log_gain = ($log_gain + 1) * GetId3_Lib_Helper::RGADamplitude2dB(2);
+		$log_gain = ($log_gain + 1) * Helper::RGADamplitude2dB(2);
 
 		// The value of Y is a linear representation of a gain change of up to –6 dB. Y is considered to
 		// be an unsigned fractional integer, with a leading value of 1, or: 0.1 Y4 Y5 Y6 Y7 (base 2). Y can

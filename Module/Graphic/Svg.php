@@ -1,4 +1,9 @@
 <?php
+
+namespace GetId3\Module\Graphic;
+
+use GetId3\Handler\BaseHandler;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +25,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Graphic_Svg extends GetId3_Handler_BaseHandler
+class Svg extends BaseHandler
 {
     /**
      *

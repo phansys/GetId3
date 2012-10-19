@@ -1,5 +1,9 @@
 <?php
 
+namespace GetId3\Module\AudioVideo;
+
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -22,7 +26,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_AudioVideo_AMFStream
+class AMFStream
 {
     public $bytes;
     public $pos;
@@ -43,7 +47,7 @@ class GetId3_Module_AudioVideo_AMFStream
      */
     public function readByte()
     {
-        return GetId3_Lib_Helper::BigEndian2Int(substr($this->bytes,
+        return Helper::BigEndian2Int(substr($this->bytes,
                                                        $this->pos++, 1));
     }
 
@@ -71,7 +75,7 @@ class GetId3_Module_AudioVideo_AMFStream
      */
     public function readDouble()
     {
-        return GetId3_Lib_Helper::BigEndian2Float($this->read(8));
+        return Helper::BigEndian2Float($this->read(8));
     }
 
     /**

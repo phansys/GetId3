@@ -1,4 +1,9 @@
 <?php
+
+namespace GetId3\Write;
+
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -19,9 +24,9 @@
  * @author James Heinrich <info@getid3.org>
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
- * @uses GetId3_Module_Tag_Lyrics3
+ * @uses GetId3\Module\Tag\Lyrics3
  */
-class GetId3_Write_Lyrics3
+class Lyrics3
 {
 	public $filename;
 	public $tag_data;
@@ -55,7 +60,7 @@ class GetId3_Write_Lyrics3
 	}
 	public function DeleteLyrics3() {
 		// Initialize GetId3 engine
-		$getID3 = new GetId3_GetId3;
+		$getID3 = new GetId3Core();
 		$ThisFileInfo = $getID3->analyze($this->filename);
 		if (isset($ThisFileInfo['lyrics3']['tag_offset_start']) && isset($ThisFileInfo['lyrics3']['tag_offset_end'])) {
 			if (is_readable($this->filename) && is_writable($this->filename) && is_file($this->filename) && ($fp = fopen($this->filename, 'a+b'))) {

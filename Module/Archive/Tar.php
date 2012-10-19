@@ -1,5 +1,10 @@
 <?php
 
+namespace GetId3\Module\Archive;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -27,7 +32,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Archive_Tar extends GetId3_Handler_BaseHandler
+class Tar extends BaseHandler
 {
 
     /**
@@ -124,8 +129,8 @@ class GetId3_Module_Archive_Tar extends GetId3_Handler_BaseHandler
                     'devmajor' => $devmaj,
                     'devminor' => $devmin
             );
-            $info['tar']['files'] = GetId3_Lib_Helper::array_merge_clobber($info['tar']['files'],
-                                                                           GetId3_Lib_Helper::CreateDeepArray($info['tar']['file_details'][$name]['name'],
+            $info['tar']['files'] = Helper::array_merge_clobber($info['tar']['files'],
+                                                                           Helper::CreateDeepArray($info['tar']['file_details'][$name]['name'],
                                                                                                               '/',
                                                                                                               $size));
         }

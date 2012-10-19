@@ -1,4 +1,11 @@
 <?php
+
+namespace GetId3\Module\Audio;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -20,7 +27,7 @@
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
  */
-class GetId3_Module_Audio_Flac extends GetId3_Handler_BaseHandler
+class Flac extends BaseHandler
 {
 
     /**
@@ -36,7 +43,7 @@ class GetId3_Module_Audio_Flac extends GetId3_Handler_BaseHandler
 		$StreamMarker = $this->fread(4);
 		$magic = 'fLaC';
 		if ($StreamMarker != $magic) {
-			return $this->error('Expecting "'.GetId3_Lib_Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.GetId3_Lib_Helper::PrintHexBytes($StreamMarker).'"');
+			return $this->error('Expecting "'.Helper::PrintHexBytes($magic).'" at offset '.$info['avdataoffset'].', found "'.Helper::PrintHexBytes($StreamMarker).'"');
 		}
 		$info['fileformat']            = 'flac';
 		$info['audio']['dataformat']   = 'flac';
@@ -55,9 +62,9 @@ class GetId3_Module_Audio_Flac extends GetId3_Handler_BaseHandler
 		do {
 			$BlockOffset   = $this->ftell();
 			$BlockHeader   = $this->fread(4);
-			$LastBlockFlag = (bool) (GetId3_Lib_Helper::BigEndian2Int(substr($BlockHeader, 0, 1)) & 0x80);
-			$BlockType     = GetId3_Lib_Helper::BigEndian2Int(substr($BlockHeader, 0, 1)) & 0x7F;
-			$BlockLength   = GetId3_Lib_Helper::BigEndian2Int(substr($BlockHeader, 1, 3));
+			$LastBlockFlag = (bool) (Helper::BigEndian2Int(substr($BlockHeader, 0, 1)) & 0x80);
+			$BlockType     = Helper::BigEndian2Int(substr($BlockHeader, 0, 1)) & 0x7F;
+			$BlockLength   = Helper::BigEndian2Int(substr($BlockHeader, 1, 3));
 			$BlockTypeText = self::metaBlockTypeLookup($BlockType);
 
 			if (($BlockOffset + 4 + $BlockLength) > $info['avdataend']) {
@@ -140,7 +147,7 @@ class GetId3_Module_Audio_Flac extends GetId3_Handler_BaseHandler
 		}
 
 		// copy attachments to 'comments' array if nesesary
-		if (isset($info['flac']['PICTURE']) && $this->getid3->option_save_attachments === GetId3_GetId3::ATTACHMENTS_INLINE) {
+		if (isset($info['flac']['PICTURE']) && $this->getid3->option_save_attachments === GetId3Core::ATTACHMENTS_INLINE) {
 			foreach ($info['flac']['PICTURE'] as $key => $valuearray) {
 				if (!empty($valuearray['image_mime']) && !empty($valuearray['data'])) {
 					$info['flac']['comments']['picture'][] = array('image_mime' => $valuearray['image_mime'], 'data' => $valuearray['data']);
@@ -204,16 +211,16 @@ class GetId3_Module_Audio_Flac extends GetId3_Handler_BaseHandler
 		$info['flac']['STREAMINFO'] = array();
 		$streaminfo = &$info['flac']['STREAMINFO'];
 
-		$streaminfo['min_block_size']  = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, 0, 2));
-		$streaminfo['max_block_size']  = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, 2, 2));
-		$streaminfo['min_frame_size']  = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, 4, 3));
-		$streaminfo['max_frame_size']  = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, 7, 3));
+		$streaminfo['min_block_size']  = Helper::BigEndian2Int(substr($BlockData, 0, 2));
+		$streaminfo['max_block_size']  = Helper::BigEndian2Int(substr($BlockData, 2, 2));
+		$streaminfo['min_frame_size']  = Helper::BigEndian2Int(substr($BlockData, 4, 3));
+		$streaminfo['max_frame_size']  = Helper::BigEndian2Int(substr($BlockData, 7, 3));
 
-		$SRCSBSS                       = GetId3_Lib_Helper::BigEndian2Bin(substr($BlockData, 10, 8));
-		$streaminfo['sample_rate']     = GetId3_Lib_Helper::Bin2Dec(substr($SRCSBSS,  0, 20));
-		$streaminfo['channels']        = GetId3_Lib_Helper::Bin2Dec(substr($SRCSBSS, 20,  3)) + 1;
-		$streaminfo['bits_per_sample'] = GetId3_Lib_Helper::Bin2Dec(substr($SRCSBSS, 23,  5)) + 1;
-		$streaminfo['samples_stream']  = GetId3_Lib_Helper::Bin2Dec(substr($SRCSBSS, 28, 36));
+		$SRCSBSS                       = Helper::BigEndian2Bin(substr($BlockData, 10, 8));
+		$streaminfo['sample_rate']     = Helper::Bin2Dec(substr($SRCSBSS,  0, 20));
+		$streaminfo['channels']        = Helper::Bin2Dec(substr($SRCSBSS, 20,  3)) + 1;
+		$streaminfo['bits_per_sample'] = Helper::Bin2Dec(substr($SRCSBSS, 23,  5)) + 1;
+		$streaminfo['samples_stream']  = Helper::Bin2Dec(substr($SRCSBSS, 28, 36));
 
 		$streaminfo['audio_signature'] = substr($BlockData, 18, 16);
 
@@ -248,7 +255,7 @@ class GetId3_Module_Audio_Flac extends GetId3_Handler_BaseHandler
 	private function parseAPPLICATION($BlockData) {
 		$info = &$this->getid3->info;
 
-		$ApplicationID = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, 0, 4));
+		$ApplicationID = Helper::BigEndian2Int(substr($BlockData, 0, 4));
 		$info['flac']['APPLICATION'][$ApplicationID]['name'] = self::applicationIDLookup($ApplicationID);
 		$info['flac']['APPLICATION'][$ApplicationID]['data'] = substr($BlockData, 4);
 
@@ -272,15 +279,15 @@ class GetId3_Module_Audio_Flac extends GetId3_Handler_BaseHandler
 			if ($SampleNumberString == $placeholderpattern) {
 
 				// placeholder point
-				GetId3_Lib_Helper::safe_inc($info['flac']['SEEKTABLE']['placeholders'], 1);
+				Helper::safe_inc($info['flac']['SEEKTABLE']['placeholders'], 1);
 				$offset += 10;
 
 			} else {
 
-				$SampleNumber                                        = GetId3_Lib_Helper::BigEndian2Int($SampleNumberString);
-				$info['flac']['SEEKTABLE'][$SampleNumber]['offset']  = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, $offset, 8));
+				$SampleNumber                                        = Helper::BigEndian2Int($SampleNumberString);
+				$info['flac']['SEEKTABLE'][$SampleNumber]['offset']  = Helper::BigEndian2Int(substr($BlockData, $offset, 8));
 				$offset += 8;
-				$info['flac']['SEEKTABLE'][$SampleNumber]['samples'] = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, $offset, 2));
+				$info['flac']['SEEKTABLE'][$SampleNumber]['samples'] = Helper::BigEndian2Int(substr($BlockData, $offset, 2));
 				$offset += 2;
 
 			}
@@ -297,7 +304,7 @@ class GetId3_Module_Audio_Flac extends GetId3_Handler_BaseHandler
 	private function parseVORBIS_COMMENT($BlockData) {
 		$info = &$this->getid3->info;
 
-		$getid3_ogg = new GetId3_Module_Audio_Ogg($this->getid3);
+		$getid3_ogg = new GetId3\Module\Audio\Ogg($this->getid3);
 		if ($this->isDependencyFor('matroska')) {
 			$getid3_ogg->data_string_flag = true;
 			$getid3_ogg->data_string = $this->data_string;
@@ -324,20 +331,20 @@ class GetId3_Module_Audio_Flac extends GetId3_Handler_BaseHandler
 		$offset = 0;
 		$info['flac']['CUESHEET']['media_catalog_number'] =                              trim(substr($BlockData, $offset, 128), "\0");
 		$offset += 128;
-		$info['flac']['CUESHEET']['lead_in_samples']      =         GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, $offset, 8));
+		$info['flac']['CUESHEET']['lead_in_samples']      =         Helper::BigEndian2Int(substr($BlockData, $offset, 8));
 		$offset += 8;
-		$info['flac']['CUESHEET']['flags']['is_cd']       = (bool) (GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, $offset, 1)) & 0x80);
+		$info['flac']['CUESHEET']['flags']['is_cd']       = (bool) (Helper::BigEndian2Int(substr($BlockData, $offset, 1)) & 0x80);
 		$offset += 1;
 
 		$offset += 258; // reserved
 
-		$info['flac']['CUESHEET']['number_tracks']        =         GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, $offset, 1));
+		$info['flac']['CUESHEET']['number_tracks']        =         Helper::BigEndian2Int(substr($BlockData, $offset, 1));
 		$offset += 1;
 
 		for ($track = 0; $track < $info['flac']['CUESHEET']['number_tracks']; $track++) {
-			$TrackSampleOffset = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, $offset, 8));
+			$TrackSampleOffset = Helper::BigEndian2Int(substr($BlockData, $offset, 8));
 			$offset += 8;
-			$TrackNumber       = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, $offset, 1));
+			$TrackNumber       = Helper::BigEndian2Int(substr($BlockData, $offset, 1));
 			$offset += 1;
 
 			$info['flac']['CUESHEET']['tracks'][$TrackNumber]['sample_offset']         = $TrackSampleOffset;
@@ -345,20 +352,20 @@ class GetId3_Module_Audio_Flac extends GetId3_Handler_BaseHandler
 			$info['flac']['CUESHEET']['tracks'][$TrackNumber]['isrc']                  =                           substr($BlockData, $offset, 12);
 			$offset += 12;
 
-			$TrackFlagsRaw                                                             = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, $offset, 1));
+			$TrackFlagsRaw                                                             = Helper::BigEndian2Int(substr($BlockData, $offset, 1));
 			$offset += 1;
 			$info['flac']['CUESHEET']['tracks'][$TrackNumber]['flags']['is_audio']     = (bool) ($TrackFlagsRaw & 0x80);
 			$info['flac']['CUESHEET']['tracks'][$TrackNumber]['flags']['pre_emphasis'] = (bool) ($TrackFlagsRaw & 0x40);
 
 			$offset += 13; // reserved
 
-			$info['flac']['CUESHEET']['tracks'][$TrackNumber]['index_points']          = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, $offset, 1));
+			$info['flac']['CUESHEET']['tracks'][$TrackNumber]['index_points']          = Helper::BigEndian2Int(substr($BlockData, $offset, 1));
 			$offset += 1;
 
 			for ($index = 0; $index < $info['flac']['CUESHEET']['tracks'][$TrackNumber]['index_points']; $index++) {
-				$IndexSampleOffset = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, $offset, 8));
+				$IndexSampleOffset = Helper::BigEndian2Int(substr($BlockData, $offset, 8));
 				$offset += 8;
-				$IndexNumber       = GetId3_Lib_Helper::BigEndian2Int(substr($BlockData, $offset, 1));
+				$IndexNumber       = Helper::BigEndian2Int(substr($BlockData, $offset, 1));
 				$offset += 1;
 
 				$offset += 3; // reserved
@@ -378,18 +385,18 @@ class GetId3_Module_Audio_Flac extends GetId3_Handler_BaseHandler
 	public function parsePICTURE($Block='') {
 		$info = &$this->getid3->info;
 
-		$picture['typeid']         = GetId3_Lib_Helper::BigEndian2Int($this->fread(4));
+		$picture['typeid']         = Helper::BigEndian2Int($this->fread(4));
 		$picture['type']           = self::pictureTypeLookup($picture['typeid']);
-		$picture['image_mime']     = $this->fread(GetId3_Lib_Helper::BigEndian2Int($this->fread(4)));
-		$descr_length              = GetId3_Lib_Helper::BigEndian2Int($this->fread(4));
+		$picture['image_mime']     = $this->fread(Helper::BigEndian2Int($this->fread(4)));
+		$descr_length              = Helper::BigEndian2Int($this->fread(4));
 		if ($descr_length) {
 			$picture['description'] = $this->fread($descr_length);
 		}
-		$picture['width']          = GetId3_Lib_Helper::BigEndian2Int($this->fread(4));
-		$picture['height']         = GetId3_Lib_Helper::BigEndian2Int($this->fread(4));
-		$picture['color_depth']    = GetId3_Lib_Helper::BigEndian2Int($this->fread(4));
-		$picture['colors_indexed'] = GetId3_Lib_Helper::BigEndian2Int($this->fread(4));
-		$data_length               = GetId3_Lib_Helper::BigEndian2Int($this->fread(4));
+		$picture['width']          = Helper::BigEndian2Int($this->fread(4));
+		$picture['height']         = Helper::BigEndian2Int($this->fread(4));
+		$picture['color_depth']    = Helper::BigEndian2Int($this->fread(4));
+		$picture['colors_indexed'] = Helper::BigEndian2Int($this->fread(4));
+		$data_length               = Helper::BigEndian2Int($this->fread(4));
 
 		if ($picture['image_mime'] == '-->') {
 			$picture['data'] = $this->fread($data_length);

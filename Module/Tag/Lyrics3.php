@@ -1,4 +1,11 @@
 <?php
+
+namespace GetId3\Module\Tag;
+
+use GetId3\Handler\BaseHandler;
+use GetId3\Lib\Helper;
+use GetId3\GetId3Core;
+
 /////////////////////////////////////////////////////////////////
 /// GetId3() by James Heinrich <info@getid3.org>               //
 //  available at http://getid3.sourceforge.net                 //
@@ -19,9 +26,9 @@
  * @author James Heinrich <info@getid3.org>
  * @link http://getid3.sourceforge.net
  * @link http://www.getid3.org
- * @uses GetId3_Module_Tag_Apetag
+ * @uses GetId3\Module\Tag\Apetag
  */
-class GetId3_Module_Tag_Lyrics3 extends GetId3_Handler_BaseHandler
+class Lyrics3 extends BaseHandler
 {
 
     /**
@@ -33,7 +40,7 @@ class GetId3_Module_Tag_Lyrics3 extends GetId3_Handler_BaseHandler
 
 		// http://www.volweb.cz/str/tags.htm
 
-		if (!GetId3_Lib_Helper::intValueSupported($info['filesize'])) {
+		if (!Helper::intValueSupported($info['filesize'])) {
 			$info['warning'][] = 'Unable to check for Lyrics3 because file is larger than '.round(PHP_INT_MAX / 1073741824).'GB';
 			return false;
 		}
@@ -113,10 +120,10 @@ class GetId3_Module_Tag_Lyrics3 extends GetId3_Handler_BaseHandler
 			if (!isset($info['ape'])) {
 				$GETID3_ERRORARRAY = &$info['warning'];
 
-                if (class_exists('GetId3_Module_Tag_Apetag')) {
-					$getid3_temp = new GetId3_GetId3();
+                if (class_exists('GetId3\\Module\\Tag\\Apetag')) {
+					$getid3_temp = new GetId3Core();
 					$getid3_temp->openfile($this->getid3->filename);
-					$getid3_apetag = new GetId3_Module_Tag_Apetag($getid3_temp);
+					$getid3_apetag = new GetId3\Module\Tag\Apetag($getid3_temp);
 					$getid3_apetag->overrideendoffset = $info['lyrics3']['tag_offset_start'];
 					$getid3_apetag->Analyze();
 					if (!empty($getid3_temp->info['ape'])) {
@@ -145,7 +152,7 @@ class GetId3_Module_Tag_Lyrics3 extends GetId3_Handler_BaseHandler
 	public function getLyrics3Data($endoffset, $version, $length) {
 		$info = &$this->getid3->info;
 
-		if (!GetId3_Lib_Helper::intValueSupported($endoffset)) {
+		if (!Helper::intValueSupported($endoffset)) {
 			$info['warning'][] = 'Unable to check for Lyrics3 because file is larger than '.round(PHP_INT_MAX / 1073741824).'GB';
 			return false;
 		}
