@@ -3,6 +3,7 @@
 namespace GetId3\Module\AudioVideo;
 
 use GetId3\Handler\BaseHandler;
+use GetId3\Module\Audio\Mp3;
 use GetId3\Lib\Helper;
 use GetId3\GetId3Core;
 
@@ -102,7 +103,7 @@ class Quicktime extends BaseHandler
 						$getid3_temp->openfile($this->getid3->filename);
 						$getid3_temp->info['avdataoffset'] = $info['avdataoffset'];
 						$getid3_temp->info['avdataend']    = $info['avdataend'];
-						$getid3_mp3 = new GetId3\Module\Audio\Mp3($getid3_temp);
+						$getid3_mp3 = new Mp3($getid3_temp);
 						if ($getid3_mp3->MPEGaudioHeaderValid($getid3_mp3->MPEGaudioHeaderDecode(fread($this->getid3->fp, 4)))) {
 							$getid3_mp3->getOnlyMPEGaudioInfo($getid3_temp->info['avdataoffset'], false);
 							if (!empty($getid3_temp->info['warning'])) {
