@@ -231,12 +231,12 @@ abstract class BaseHandler
             }
 
             // do not extract at all
-            if ($this->getid3->option_save_attachments === self::ATTACHMENTS_NONE) {
+            if ($this->getid3->option_save_attachments === GetId3Core::ATTACHMENTS_NONE) {
                 unset($ThisFileInfoIndex); // do not set any
             }
 
             // extract to return array
-            else if ($this->getid3->option_save_attachments === self::ATTACHMENTS_INLINE) {
+            else if ($this->getid3->option_save_attachments === GetId3Core::ATTACHMENTS_INLINE) {
 
                 // get whole data in one pass, till it is anyway stored in memory
                 $this->fseek($offset);
