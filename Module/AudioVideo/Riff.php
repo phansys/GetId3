@@ -601,7 +601,7 @@ class Riff extends BaseHandler
 
                 if (isset($thisfile_riff['AVI ']['hdrl']['strl']['indx'])) {
                     //$bIndexType = array(
-                    //	0x00 => 'AVI_INDEX_OF_INDEXES',
+                    //    0x00 => 'AVI_INDEX_OF_INDEXES',
                     //	0x01 => 'AVI_INDEX_OF_CHUNKS',
                     //	0x80 => 'AVI_INDEX_IS_DATA',
                     //);
@@ -1392,7 +1392,7 @@ class Riff extends BaseHandler
                                 $FirstFourBytes = substr($AudioChunkHeader, 8, 4);
                                 if (preg_match('/^\xFF[\xE2-\xE7\xF2-\xF7\xFA-\xFF][\x00-\xEB]/s', $FirstFourBytes)) {
                                     // MP3
-                                    if (GGetId3\Module\Audio\Mp3::MPEGaudioHeaderBytesValid($FirstFourBytes)) {
+                                    if (Mp3::MPEGaudioHeaderBytesValid($FirstFourBytes)) {
                                         $getid3_temp = new GetId3Core();
                                         $getid3_temp->openfile($this->getid3->filename);
                                         $getid3_temp->info['avdataoffset'] = ftell($this->getid3->fp) - 4;
@@ -1488,7 +1488,7 @@ class Riff extends BaseHandler
                             if ((strlen($RIFFdataChunkContentsTest) > 0) && preg_match('/^\xFF[\xE2-\xE7\xF2-\xF7\xFA-\xFF][\x00-\xEB]/s', substr($RIFFdataChunkContentsTest, 0, 4))) {
 
                                 // Probably is MP3 data
-                                if (GetId3\Module\Audio\Mp3::MPEGaudioHeaderBytesValid(substr($RIFFdataChunkContentsTest, 0, 4))) {
+                                if (Mp3::MPEGaudioHeaderBytesValid(substr($RIFFdataChunkContentsTest, 0, 4))) {
                                     $getid3_temp = new GetId3Core();
                                     $getid3_temp->openfile($this->getid3->filename);
                                     $getid3_temp->info['avdataoffset'] = $RIFFchunk[$chunkname][$thisindex]['offset'];
