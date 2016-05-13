@@ -24,7 +24,7 @@
 // |   $au = new AudioInfo();                                             |
 // |   print_r($au->Info('file.flac');                                    |
 // +----------------------------------------------------------------------+
-// | Authors: Allan Hansen <ahØartemis*dk>                                |
+// | Authors: Allan Hansen <ahï¿½artemis*dk>                                |
 // +----------------------------------------------------------------------+
 //
 
@@ -47,7 +47,7 @@ class AudioInfo
     /**
      * Constructor
      */
-    public function AudioInfo()
+    public function __construct()
     {
         // Initialize getID3 engine
         $this->getID3 = new getID3();

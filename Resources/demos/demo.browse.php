@@ -347,7 +347,7 @@ if (isset($_REQUEST['filename'])) {
             echo '<td><b>Average:</b></td>';
             echo '<td align="right">'.number_format($TotalScannedFilesize / max($TotalScannedKnownFiles, 1)).'</td>';
             echo '<td>&nbsp;</td>';
-            echo '<td align="right">'.getid3_lib::PlaytimeString($TotalScannedPlaytime / max($TotalScannedPlaytimeFiles, 1)).'</td>';
+            echo '<td align="right">'.\GetId3\Lib\Helper::PlaytimeString($TotalScannedPlaytime / max($TotalScannedPlaytimeFiles, 1)).'</td>';
             echo '<td align="right">'.BitrateText(round(($TotalScannedBitrate / 1000) / max($TotalScannedBitrateFiles, 1))).'</td>';
             echo '<td rowspan="2" colspan="'.($columnsintable - 5).'"><table class="table" border="0" cellspacing="0" cellpadding="2"><tr><th align="right">Identified Files:</th><td align="right">'.number_format($TotalScannedKnownFiles).'</td><td>&nbsp;&nbsp;&nbsp;</td><th align="right">Errors:</th><td align="right">'.number_format($FilesWithErrors).'</td></tr><tr><th align="right">Unknown Files:</th><td align="right">'.number_format($TotalScannedUnknownFiles).'</td><td>&nbsp;&nbsp;&nbsp;</td><th align="right">Warnings:</th><td align="right">'.number_format($FilesWithWarnings).'</td></tr></table>';
             echo '</tr>';
@@ -355,7 +355,7 @@ if (isset($_REQUEST['filename'])) {
             echo '<td><b>Total:</b></td>';
             echo '<td align="right">'.number_format($TotalScannedFilesize).'</td>';
             echo '<td>&nbsp;</td>';
-            echo '<td align="right">'.getid3_lib::PlaytimeString($TotalScannedPlaytime).'</td>';
+            echo '<td align="right">'.\GetId3\Lib\Helper::PlaytimeString($TotalScannedPlaytime).'</td>';
             echo '<td>&nbsp;</td>';
             echo '</tr>';
         }
