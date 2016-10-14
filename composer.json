@@ -12,9 +12,6 @@
             "email": "info@getid3.org"
         }
     ],
-    "require": {
-        "php": "~5.3"
-    },
     "suggest": {
         "ext-rar": "RAR extension is required for RAR archive module.",
         "ext-exif": "EXIF extension is required for graphic modules."
