@@ -1,5 +1,5 @@
 {
-    "name": "phansys/getid3",
+    "name": "willwh/getid3",
     "description": "This fork of GetId3 library updates to PSR-2 / PSR-4 CS, adds namespaces and makes it installable by composer.",
     "keywords": ["getid3", "tags", "metadata"],
     "type": "library",
@@ -13,7 +13,7 @@
         }
     ],
     "require": {
-        "php": "~5.3"
+        "php": ">=5.3"
     },
     "suggest": {
         "ext-rar": "RAR extension is required for RAR archive module.",
