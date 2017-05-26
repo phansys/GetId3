@@ -942,7 +942,7 @@ class Quicktime extends BaseHandler
 
                     return false;
                 }
-                $info['quicktime']['time_scale'] = (isset($info['quicktime']['time_scale']) ? max($info['quicktime']['time_scale'], $atom_structure['time_scale']) : $atom_structure['time_scale']);
+                $info['quicktime']['time_scale'] = ((isset($info['quicktime']['time_scale']) && ($info['quicktime']['time_scale'] < 1000)) ? max($info['quicktime']['time_scale'], $atom_structure['time_scale']) : $atom_structure['time_scale']);
 
                 $atom_structure['creation_time_unix'] = Helper::DateMac2Unix($atom_structure['creation_time']);
                 $atom_structure['modify_time_unix'] = Helper::DateMac2Unix($atom_structure['modify_time']);
@@ -1043,7 +1043,7 @@ class Quicktime extends BaseHandler
                 }
                 $atom_structure['creation_time_unix'] = Helper::DateMac2Unix($atom_structure['creation_time']);
                 $atom_structure['modify_time_unix'] = Helper::DateMac2Unix($atom_structure['modify_time']);
-                $info['quicktime']['time_scale'] = (isset($info['quicktime']['time_scale']) ? max($info['quicktime']['time_scale'], $atom_structure['time_scale']) : $atom_structure['time_scale']);
+                $info['quicktime']['time_scale']    = ((isset($info['quicktime']['time_scale']) && ($info['quicktime']['time_scale'] < 1000)) ? max($info['quicktime']['time_scale'], $atom_structure['time_scale']) : $atom_structure['time_scale']);
                 $info['quicktime']['display_scale'] = $atom_structure['matrix_a'];
                 $info['playtime_seconds'] = $atom_structure['duration'] / $atom_structure['time_scale'];
                 break;
